@@ -342,10 +342,10 @@ export default function Sales() {
                 <div className="lg:col-span-5">
                     <div className="card p-5 shadow-sm min-h-[520px] flex flex-col">
                         <div className="flex items-center justify-between mb-5 pb-4 border-b border-gray-100">
-                            <h2 className="text-lg font-bold text-gray-800">Process Sale</h2>
+                            <h2 className="text-lg font-bold text-gray-800 ">Process Sale</h2>
                             <button
                                 onClick={() => { setIsMultiMode(m => !m); setSelectedMed(null); setSearch(''); setMedicines([]); setMultiCart([]); }}
-                                className="text-xs font-black tracking-tighter px-3 py-1.5 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-600 hover:bg-emerald-100 transition-all"
+                                className="text-xs font-black tracking-tighter px-3 py-1.5  rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-600 hover:bg-emerald-100 transition-all cursor-pointer"
                             >
                                 {isMultiMode ? '← SINGLE SALE' : '+ MULTI SELECT'}
                             </button>
@@ -458,7 +458,7 @@ export default function Sales() {
                                         </div>
 
                                         <button onClick={addSingleToCart}
-                                            className="w-full h-12 bg-gradient-to-r from-teal-500 to-blue-600 hover:from-teal-600 hover:to-blue-700 text-white rounded-xl font-bold flex items-center justify-center gap-2 transition-all shadow-md active:scale-[0.98] text-sm">
+                                            className="w-full h-12 bg-gradient-to-r from-blue-600 to-emerald-500 hover:from-teal-600 hover:to-blue-700 text-white rounded-xl font-bold flex items-center justify-center gap-2 transition-all shadow-md active:scale-[0.98] text-sm cursor-pointer">
                                             <ShoppingCart size={18} /> Process Sale
                                         </button>
                                     </div>
@@ -611,15 +611,15 @@ export default function Sales() {
                                             </div>
                                             <div className="flex items-center gap-5">
                                                 <div className="flex items-center border border-gray-200 rounded-lg overflow-hidden h-8 bg-white shadow-sm">
-                                                    <button onClick={() => updateQty(item.id, -1)} className="w-8 h-full hover:bg-gray-50 text-gray-500 border-r text-base font-bold transition-colors">−</button>
+                                                    <button onClick={() => updateQty(item.id, -1)} className="w-8 h-full hover:bg-gray-50 text-gray-500 border-r text-base font-bold transition-colors cursor-pointer">−</button>
                                                     <span className="w-10 text-center text-xs font-black text-gray-800">{item.qty}</span>
-                                                    <button onClick={() => updateQty(item.id, 1)} className="w-8 h-full hover:bg-gray-50 text-gray-500 border-l text-base font-bold transition-colors">+</button>
+                                                    <button onClick={() => updateQty(item.id, 1)} className="w-8 h-full hover:bg-gray-50 text-gray-500 border-l text-base font-bold transition-colors cursor-pointer">+</button>
                                                 </div>
                                                 <span className="font-black text-blue-600 text-sm w-24 text-right">ETB {(item.selling_price * item.qty).toFixed(2)}</span>
                                                 <div className="w-[1px] h-6 bg-gray-200 mx-1" />
                                                 <button
                                                     onClick={() => removeFromCart(item.id)}
-                                                    className="w-8 h-8 rounded-full bg-red-50 text-red-500 hover:bg-red-500 hover:text-white flex items-center justify-center transition-all"
+                                                    className="w-8 h-8 rounded-full bg-red-50 text-red-500 hover:bg-red-500 hover:text-white flex items-center justify-center transition-all cursor-pointer"
                                                     title="Remove Item"
                                                 >
                                                     <Trash2 size={14} />
@@ -638,7 +638,7 @@ export default function Sales() {
                                 <div className="flex justify-between items-center text-sm">
                                     <div className="flex items-center gap-2">
                                         <span className="text-gray-500">VAT (15%)</span>
-                                        <input type="checkbox" checked={applyVat} onChange={e => setApplyVat(e.target.checked)} className="w-4 h-4 rounded text-blue-600 border-gray-300" />
+                                        <input type="checkbox" checked={applyVat} onChange={e => setApplyVat(e.target.checked)} className="w-4 h-4 rounded text-blue-600 border-gray-300 cursor-pointer" />
                                     </div>
                                     <span className="font-bold text-gray-800">ETB {taxAmt.toFixed(2)}</span>
                                 </div>
@@ -648,7 +648,7 @@ export default function Sales() {
                                         <span className="text-[9px] font-black text-blue-700 bg-blue-50 px-2 py-0.5 rounded border border-blue-100 uppercase">SET PAID TO 0</span>
                                         <input type="checkbox" checked={isUnpaid}
                                             onChange={e => { setIsUnpaid(e.target.checked); if (e.target.checked) setAmountPaid('0'); }}
-                                            className="w-4 h-4 rounded text-blue-600 border-gray-300" />
+                                            className="w-4 h-4 rounded text-blue-600 border-gray-300 cursor-pointer" />
                                     </div>
                                 </div>
                                 <div className="pt-3 border-t border-gray-100 flex justify-between items-baseline">
@@ -663,23 +663,23 @@ export default function Sales() {
                                     <div className="w-2 h-4 bg-blue-500 rounded-full" />
                                     <h3 className="text-xs font-black text-gray-800 uppercase tracking-widest">Sale Registration Details</h3>
                                 </div>
-                                
+
                                 <div className="grid grid-cols-2 gap-x-5 gap-y-5">
                                     <div>
                                         <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest block mb-1.5">Amount Paid (ETB)</label>
-                                        <input type="number" value={amountPaid} onChange={e => setAmountPaid(e.target.value)} placeholder="0.00" 
+                                        <input type="number" value={amountPaid} onChange={e => setAmountPaid(e.target.value)} placeholder="0.00"
                                             className="w-full h-10 bg-white border border-gray-200 focus:border-blue-400 focus:ring-2 focus:ring-blue-100 shadow-sm rounded-lg px-3 text-sm font-bold transition-all outline-none" />
                                     </div>
                                     <div>
                                         <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest block mb-1.5">Payment Method</label>
-                                        <select value={paymentMethod} onChange={e => setPaymentMethod(e.target.value)} 
+                                        <select value={paymentMethod} onChange={e => setPaymentMethod(e.target.value)}
                                             className="w-full h-10 bg-white border border-gray-200 focus:border-blue-400 focus:ring-2 focus:ring-blue-100 shadow-sm rounded-lg px-3 text-sm transition-all outline-none cursor-pointer">
                                             {PAYMENT_METHODS.map(m => <option key={m.id} value={m.id}>{m.label}</option>)}
                                         </select>
                                     </div>
                                     <div>
                                         <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest block mb-1.5">Discount (ETB)</label>
-                                        <input type="number" value={discount} onChange={e => setDiscount(e.target.value)} placeholder="0.00" 
+                                        <input type="number" value={discount} onChange={e => setDiscount(e.target.value)} placeholder="0.00"
                                             className="w-full h-10 bg-white border border-gray-200 focus:border-blue-400 focus:ring-2 focus:ring-blue-100 shadow-sm rounded-lg px-3 text-sm transition-all outline-none" />
                                     </div>
 
@@ -723,7 +723,7 @@ export default function Sales() {
                             )}
 
                             <button onClick={handleCheckout} disabled={processing || !cart.length}
-                                className="mt-3 w-full h-14 bg-gradient-to-r from-blue-600 to-emerald-500 hover:from-blue-700 hover:to-emerald-600 disabled:opacity-50 text-white rounded-xl font-black text-lg transition-all shadow-lg shadow-blue-500/25 active:scale-[0.98] flex items-center justify-center gap-3">
+                                className="mt-3 w-full h-14 bg-gradient-to-r from-blue-600 to-emerald-500 hover:from-blue-700 hover:to-emerald-600 disabled:opacity-50 text-white rounded-xl font-black text-lg transition-all shadow-lg shadow-blue-500/25 active:scale-[0.98] flex items-center justify-center gap-3 cu">
                                 {processing ? <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin" /> : <><ShoppingCart size={22} /> Complete Sale</>}
                             </button>
                         </div>

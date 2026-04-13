@@ -361,345 +361,345 @@ export default function Debts() {
                 </div>
             </div>
 
-                {/* Modals - Standardized System Style */}
+            {/* Modals - Standardized System Style */}
 
-                {/* 1. Payment Modal */}
-                {paymentModal && (
-                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/60 backdrop-blur-sm animate-fade-in overflow-y-auto">
-                        <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-slide-up border border-gray-100" onClick={e => e.stopPropagation()}>
-                            {/* Gradient Header */}
-                            <div className="bg-gradient-to-r from-blue-600 to-emerald-500 px-6 py-6 text-white rounded-t-2xl">
-                                <div className="flex items-center justify-between">
-                                    <h2 className="text-xl font-bold tracking-tight">Record Debt Payment</h2>
-                                    <button
-                                        onClick={() => { setPaymentModal(null); reset(); }}
-                                        className="text-white hover:bg-white/20 p-1.5 rounded-full transition-colors"
-                                    >
-                                        <X size={20} />
-                                    </button>
-                                </div>
-                                <p className="text-sm text-blue-100 mt-1 opacity-90">
-                                    Recording payment for {paymentModal.customer?.name || paymentModal.customer_name}
-                                </p>
-                            </div>
-
-                            {/* Balance Overview Card */}
-                            <div className="px-6 pt-6">
-                                <div className="bg-gray-50 rounded-2xl p-4 border border-gray-100 shadow-inner">
-                                    <div className="flex justify-between items-center mb-3">
-                                        <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Remaining Balance</span>
-                                        <span className="text-xl font-black text-rose-600">ETB {parseFloat(paymentModal.balance).toFixed(2)}</span>
-                                    </div>
-                                    <div className="w-full bg-gray-200 h-2.5 rounded-full overflow-hidden">
-                                        <div
-                                            className="bg-emerald-500 h-full rounded-full transition-all duration-700 shadow-sm"
-                                            style={{ width: `${(parseFloat(paymentModal.paid_amount) / parseFloat(paymentModal.amount)) * 100}%` }}
-                                        />
-                                    </div>
-                                    <div className="flex justify-between mt-2.5 items-end">
-                                        <div className="flex flex-col">
-                                            <span className="text-[10px] font-medium text-gray-400">Paid: ETB {parseFloat(paymentModal.paid_amount).toFixed(2)}</span>
-                                            <span className="text-[10px] font-medium text-gray-400">Total: ETB {parseFloat(paymentModal.amount).toFixed(2)}</span>
-                                        </div>
-                                        <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-100 text-center min-w-[80px]">
-                                            {((parseFloat(paymentModal.paid_amount) / parseFloat(paymentModal.amount)) * 100).toFixed(0)}% Complete
-                                        </span>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <form onSubmit={handleSubmit(onPayment)} className="p-6 space-y-6">
-                                <div className="relative">
-                                    <input
-                                        {...register('amount', {
-                                            required: 'Required',
-                                            min: { value: 0.01, message: 'Min 0.01' },
-                                            max: { value: paymentModal.balance, message: 'Exceeds balance' }
-                                        })}
-                                        id="modal_payment_amount"
-                                        type="number"
-                                        step="0.01"
-                                        className="peer w-full px-4 pt-6 pb-2 rounded-xl border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all outline-none bg-white font-bold text-gray-900"
-                                        placeholder=" "
-                                        autoFocus
-                                    />
-                                    <label
-                                        htmlFor="modal_payment_amount"
-                                        className="absolute left-4 top-2 text-xs text-gray-500 transition-all peer-placeholder-shown:text-base peer-placeholder-shown:top-4 peer-focus:top-2 peer-focus:text-xs peer-focus:text-blue-600 pointer-events-none"
-                                    >
-                                        Payment Amount (ETB) <span className="text-red-500">*</span>
-                                    </label>
-                                    {errors.amount && (
-                                        <p className="text-rose-600 text-[10px] font-bold mt-1.5 flex items-center gap-1">
-                                            <AlertTriangle size={10} /> {errors.amount.message}
-                                        </p>
-                                    )}
-                                </div>
-
-                                <div className="relative">
-                                    <select
-                                        {...register('payment_method', { required: true })}
-                                        id="modal_payment_method"
-                                        className="peer w-full px-4 pt-6 pb-2 rounded-xl border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all outline-none bg-white appearance-none"
-                                        defaultValue="cash"
-                                    >
-                                        <option value="cash">Cash</option>
-                                        <option value="ebirr">Ebirr</option>
-                                        <option value="ebirr_kaafi">Ebirr Kaafi</option>
-                                    </select>
-                                    <label
-                                        htmlFor="modal_payment_method"
-                                        className="absolute left-4 top-2 text-xs text-gray-500 transition-all peer-placeholder-shown:text-base peer-placeholder-shown:top-4 peer-focus:top-2 peer-focus:text-xs peer-focus:text-blue-600 pointer-events-none"
-                                    >
-                                        Payment Method <span className="text-red-500">*</span>
-                                    </label>
-                                </div>
-
-                                <div className="relative">
-                                    <textarea
-                                        {...register('notes')}
-                                        id="modal_payment_notes"
-                                        className="peer w-full px-4 pt-8 pb-3 rounded-xl border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all outline-none bg-white resize-none min-h-[100px]"
-                                        placeholder=" "
-                                    />
-                                    <label
-                                        htmlFor="modal_payment_notes"
-                                        className="absolute left-4 top-2 text-xs text-gray-500 transition-all peer-placeholder-shown:text-base peer-placeholder-shown:top-6 peer-focus:top-2 peer-focus:text-xs peer-focus:text-blue-600 pointer-events-none"
-                                    >
-                                        Notes (Optional)
-                                    </label>
-                                </div>
-
-                                <div className="flex gap-4 pt-6 border-t border-gray-100">
-                                    <button
-                                        type="button"
-                                        onClick={() => { setPaymentModal(null); reset(); }}
-                                        className="flex-1 py-3 px-6 border border-gray-300 text-gray-700 font-medium rounded-xl hover:bg-gray-50 transition-colors"
-                                    >
-                                        Cancel
-                                    </button>
-                                    <button
-                                        type="submit"
-                                        disabled={paying}
-                                        className="flex-1 py-3 px-6 bg-gradient-to-r from-blue-600 to-emerald-500 text-white font-bold rounded-xl hover:from-blue-700 hover:to-emerald-600 transition-all shadow-lg disabled:opacity-60 flex items-center justify-center gap-2"
-                                    >
-                                        {paying ? (
-                                            <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                                        ) : (
-                                            'Confirm Payment'
-                                        )}
-                                    </button>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
-                )}
-
-                {/* 2. Add New Debt Modal */}
-                {addModal && (
-                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/60 backdrop-blur-sm animate-fade-in overflow-y-auto">
-                        <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden animate-slide-up border border-gray-100" onClick={e => e.stopPropagation()}>
-                            {/* Gradient Header */}
-                            <div className="bg-gradient-to-r from-blue-600 to-emerald-500 px-6 py-6 text-white rounded-t-2xl">
-                                <div className="flex items-center justify-between">
-                                    <h2 className="text-xl font-bold tracking-tight">Add New Debt</h2>
-                                    <button
-                                        onClick={() => { setAddModal(false); reset(); }}
-                                        className="text-white hover:bg-white/20 p-1.5 rounded-full transition-colors"
-                                    >
-                                        <X size={22} />
-                                    </button>
-                                </div>
-                                <p className="text-sm text-blue-100 mt-1 opacity-90">Enter details for a new business debt record</p>
-                            </div>
-
-                            <form onSubmit={handleSubmit(async (data) => {
-                                setAdding(true);
-                                try {
-                                    await api.post('/debts', data);
-                                    toast.success('Debt record created!');
-                                    setAddModal(false);
-                                    reset();
-                                    fetchData();
-                                } catch (e) {
-                                    toast.error(e.response?.data?.message || 'Error creating debt');
-                                } finally { setAdding(false); }
-                            })} className="p-6 space-y-6">
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    <div className="relative">
-                                        <input
-                                            {...register('customer_name', { required: 'Name is required' })}
-                                            id="customer_name"
-                                            className="peer w-full px-4 pt-6 pb-2 rounded-xl border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all outline-none bg-white font-medium"
-                                            placeholder=" "
-                                        />
-                                        <label
-                                            htmlFor="customer_name"
-                                            className="absolute left-4 top-2 text-xs text-gray-500 transition-all peer-placeholder-shown:text-base peer-placeholder-shown:top-4 peer-focus:top-2 peer-focus:text-xs peer-focus:text-blue-600 pointer-events-none"
-                                        >
-                                            Customer Name <span className="text-red-500">*</span>
-                                        </label>
-                                        {errors.customer_name && <p className="text-rose-600 text-[10px] mt-1 font-bold underline decoration-rose-200">{errors.customer_name.message}</p>}
-                                    </div>
-
-                                    <div className="relative">
-                                        <input
-                                            {...register('customer_phone', { required: 'Phone is required' })}
-                                            id="customer_phone"
-                                            className="peer w-full px-4 pt-6 pb-2 rounded-xl border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all outline-none bg-white font-medium"
-                                            placeholder=" "
-                                        />
-                                        <label
-                                            htmlFor="customer_phone"
-                                            className="absolute left-4 top-2 text-xs text-gray-500 transition-all peer-placeholder-shown:text-base peer-placeholder-shown:top-4 peer-focus:top-2 peer-focus:text-xs peer-focus:text-blue-600 pointer-events-none"
-                                        >
-                                            Phone Number <span className="text-red-500">*</span>
-                                        </label>
-                                        {errors.customer_phone && <p className="text-rose-600 text-[10px] mt-1 font-bold underline decoration-rose-200">{errors.customer_phone.message}</p>}
-                                    </div>
-                                </div>
-
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    <div className="relative">
-                                        <input
-                                            {...register('amount', { required: 'Amount required', min: 0.01 })}
-                                            id="amount"
-                                            type="number"
-                                            step="0.01"
-                                            className="peer w-full px-4 pt-6 pb-2 rounded-xl border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all outline-none bg-white font-bold"
-                                            placeholder=" "
-                                        />
-                                        <label
-                                            htmlFor="amount"
-                                            className="absolute left-4 top-2 text-xs text-gray-500 transition-all peer-placeholder-shown:text-base peer-placeholder-shown:top-4 peer-focus:top-2 peer-focus:text-xs peer-focus:text-blue-600 pointer-events-none"
-                                        >
-                                            Total Amount (ETB) <span className="text-red-500">*</span>
-                                        </label>
-                                    </div>
-
-                                    <div className="relative">
-                                        <input
-                                            {...register('paid_amount')}
-                                            id="paid_amount"
-                                            type="number"
-                                            step="0.01"
-                                            className="peer w-full px-4 pt-6 pb-2 rounded-xl border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all outline-none bg-white font-medium"
-                                            placeholder=" "
-                                        />
-                                        <label
-                                            htmlFor="paid_amount"
-                                            className="absolute left-4 top-2 text-xs text-gray-500 transition-all peer-placeholder-shown:text-base peer-placeholder-shown:top-4 peer-focus:top-2 peer-focus:text-xs peer-focus:text-blue-600 pointer-events-none"
-                                        >
-                                            Paid amount
-                                        </label>
-                                    </div>
-                                </div>
-
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    <div className="relative">
-                                        <select
-                                            {...register('payment_method')}
-                                            id="payment_method"
-                                            className="peer w-full px-4 pt-6 pb-2 rounded-xl border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all outline-none bg-white appearance-none"
-                                        >
-                                            <option value="cash">Cash</option>
-                                            <option value="ebirr">Ebirr</option>
-                                            <option value="ebirr_kaafi">Ebirr Kaafi</option>
-                                            <option value="card">Card</option>
-                                            <option value="bank_transfer">Bank Transfer</option>
-                                        </select>
-                                        <label
-                                            htmlFor="payment_method"
-                                            className="absolute left-4 top-2 text-xs text-gray-500 transition-all peer-placeholder-shown:text-base peer-placeholder-shown:top-4 peer-focus:top-2 peer-focus:text-xs peer-focus:text-blue-600 pointer-events-none"
-                                        >
-                                            Initial Payment Method
-                                        </label>
-                                    </div>
-
-                                    <div className="relative">
-                                        <input
-                                            {...register('due_date')}
-                                            id="due_date"
-                                            type="date"
-                                            className="peer w-full px-4 pt-6 pb-2 rounded-xl border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all outline-none bg-white"
-                                        />
-                                        <label
-                                            htmlFor="due_date"
-                                            className="absolute left-4 top-2 text-xs text-gray-500 transition-all peer-placeholder-shown:text-base peer-placeholder-shown:top-4 peer-focus:top-2 peer-focus:text-xs peer-focus:text-blue-600 pointer-events-none"
-                                        >
-                                            Due Date
-                                        </label>
-                                    </div>
-                                </div>
-
-                                <div className="relative">
-                                    <textarea
-                                        {...register('notes')}
-                                        id="notes"
-                                        className="peer w-full px-4 pt-8 pb-3 rounded-xl border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all outline-none bg-white resize-none min-h-[100px]"
-                                        placeholder=" "
-                                    />
-                                    <label
-                                        htmlFor="notes"
-                                        className="absolute left-4 top-2 text-xs text-gray-500 transition-all peer-placeholder-shown:text-base peer-placeholder-shown:top-6 peer-focus:top-2 peer-focus:text-xs peer-focus:text-blue-600 pointer-events-none"
-                                    >
-                                        Notes (Optional)
-                                    </label>
-                                </div>
-
-                                <div className="flex gap-4 pt-6 border-t border-gray-100">
-                                    <button
-                                        type="button"
-                                        onClick={() => { setAddModal(false); reset(); }}
-                                        className="flex-1 py-3 px-6 border border-gray-300 text-gray-700 font-medium rounded-xl hover:bg-gray-50 transition-colors"
-                                    >
-                                        Cancel
-                                    </button>
-                                    <button
-                                        type="submit"
-                                        disabled={adding}
-                                        className="flex-1 py-3 px-6 bg-gradient-to-r from-blue-600 to-emerald-500 text-white font-bold rounded-xl hover:from-blue-700 hover:to-emerald-600 transition-all shadow-lg disabled:opacity-60 flex items-center justify-center gap-2"
-                                    >
-                                        {adding ? (
-                                            <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                                        ) : (
-                                            'Create Debt Record'
-                                        )}
-                                    </button>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
-                )}
-
-                {/* 3. Delete Confirmation Modal */}
-                {deleteConfirm && (
-                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/60 backdrop-blur-sm animate-fade-in">
-                        <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-8 animate-slide-up border border-gray-100 text-center" onClick={e => e.stopPropagation()}>
-                            <div className="w-20 h-20 bg-rose-50 text-rose-600 rounded-full flex items-center justify-center mx-auto mb-6 border-4 border-rose-100 shadow-inner">
-                                <Trash2 size={36} strokeWidth={2.5} className="animate-pulse" />
-                            </div>
-                            <h2 className="text-xl font-black text-gray-900 mb-3 tracking-tight">Delete Record?</h2>
-                            <p className="text-sm text-gray-500 mb-8 leading-relaxed">
-                                Are you sure you want to delete the debt record for <span className="font-bold text-gray-900 underline decoration-rose-200">{deleteConfirm.customer?.name || deleteConfirm.customer_name}</span>? This action is irreversible.
-                            </p>
-                            <div className="flex gap-4">
+            {/* 1. Payment Modal */}
+            {paymentModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/60 backdrop-blur-sm animate-fade-in overflow-y-auto">
+                    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-slide-up border border-gray-100" onClick={e => e.stopPropagation()}>
+                        {/* Gradient Header */}
+                        <div className="bg-gradient-to-r from-blue-600 to-emerald-500 px-6 py-6 text-white rounded-t-2xl">
+                            <div className="flex items-center justify-between">
+                                <h2 className="text-xl font-bold tracking-tight">Record Debt Payment</h2>
                                 <button
-                                    onClick={() => setDeleteConfirm(null)}
-                                    className="flex-1 py-3.5 rounded-xl border border-gray-200 text-gray-600 font-bold hover:bg-gray-50 transition-all active:scale-95"
+                                    onClick={() => { setPaymentModal(null); reset(); }}
+                                    className="text-white hover:bg-white/20 p-1.5 rounded-full transition-colors"
+                                >
+                                    <X size={20} />
+                                </button>
+                            </div>
+                            <p className="text-sm text-blue-100 mt-1 opacity-90">
+                                Recording payment for {paymentModal.customer?.name || paymentModal.customer_name}
+                            </p>
+                        </div>
+
+                        {/* Balance Overview Card */}
+                        <div className="px-6 pt-6">
+                            <div className="bg-gray-50 rounded-2xl p-4 border border-gray-100 shadow-inner">
+                                <div className="flex justify-between items-center mb-3">
+                                    <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Remaining Balance</span>
+                                    <span className="text-xl font-black text-rose-600">ETB {parseFloat(paymentModal.balance).toFixed(2)}</span>
+                                </div>
+                                <div className="w-full bg-gray-200 h-2.5 rounded-full overflow-hidden">
+                                    <div
+                                        className="bg-emerald-500 h-full rounded-full transition-all duration-700 shadow-sm"
+                                        style={{ width: `${(parseFloat(paymentModal.paid_amount) / parseFloat(paymentModal.amount)) * 100}%` }}
+                                    />
+                                </div>
+                                <div className="flex justify-between mt-2.5 items-end">
+                                    <div className="flex flex-col">
+                                        <span className="text-[10px] font-medium text-gray-400">Paid: ETB {parseFloat(paymentModal.paid_amount).toFixed(2)}</span>
+                                        <span className="text-[10px] font-medium text-gray-400">Total: ETB {parseFloat(paymentModal.amount).toFixed(2)}</span>
+                                    </div>
+                                    <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-100 text-center min-w-[80px]">
+                                        {((parseFloat(paymentModal.paid_amount) / parseFloat(paymentModal.amount)) * 100).toFixed(0)}% Complete
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <form onSubmit={handleSubmit(onPayment)} className="p-6 space-y-6">
+                            <div className="relative">
+                                <input
+                                    {...register('amount', {
+                                        required: 'Required',
+                                        min: { value: 0.01, message: 'Min 0.01' },
+                                        max: { value: paymentModal.balance, message: 'Exceeds balance' }
+                                    })}
+                                    id="modal_payment_amount"
+                                    type="number"
+                                    step="0.01"
+                                    className="peer w-full px-4 pt-6 pb-2 rounded-xl border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all outline-none bg-white font-bold text-gray-900"
+                                    placeholder=" "
+                                    autoFocus
+                                />
+                                <label
+                                    htmlFor="modal_payment_amount"
+                                    className="absolute left-4 top-2 text-xs text-gray-500 transition-all peer-placeholder-shown:text-base peer-placeholder-shown:top-4 peer-focus:top-2 peer-focus:text-xs peer-focus:text-blue-600 pointer-events-none"
+                                >
+                                    Payment Amount (ETB) <span className="text-red-500">*</span>
+                                </label>
+                                {errors.amount && (
+                                    <p className="text-rose-600 text-[10px] font-bold mt-1.5 flex items-center gap-1">
+                                        <AlertTriangle size={10} /> {errors.amount.message}
+                                    </p>
+                                )}
+                            </div>
+
+                            <div className="relative">
+                                <select
+                                    {...register('payment_method', { required: true })}
+                                    id="modal_payment_method"
+                                    className="peer w-full px-4 pt-6 pb-2 rounded-xl border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all outline-none bg-white appearance-none"
+                                    defaultValue="cash"
+                                >
+                                    <option value="cash">Cash</option>
+                                    <option value="ebirr">Ebirr</option>
+                                    <option value="ebirr_kaafi">Ebirr Kaafi</option>
+                                </select>
+                                <label
+                                    htmlFor="modal_payment_method"
+                                    className="absolute left-4 top-2 text-xs text-gray-500 transition-all peer-placeholder-shown:text-base peer-placeholder-shown:top-4 peer-focus:top-2 peer-focus:text-xs peer-focus:text-blue-600 pointer-events-none"
+                                >
+                                    Payment Method <span className="text-red-500">*</span>
+                                </label>
+                            </div>
+
+                            <div className="relative">
+                                <textarea
+                                    {...register('notes')}
+                                    id="modal_payment_notes"
+                                    className="peer w-full px-4 pt-8 pb-3 rounded-xl border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all outline-none bg-white resize-none min-h-[100px]"
+                                    placeholder=" "
+                                />
+                                <label
+                                    htmlFor="modal_payment_notes"
+                                    className="absolute left-4 top-2 text-xs text-gray-500 transition-all peer-placeholder-shown:text-base peer-placeholder-shown:top-6 peer-focus:top-2 peer-focus:text-xs peer-focus:text-blue-600 pointer-events-none"
+                                >
+                                    Notes (Optional)
+                                </label>
+                            </div>
+
+                            <div className="flex gap-4 pt-6 border-t border-gray-100">
+                                <button
+                                    type="button"
+                                    onClick={() => { setPaymentModal(null); reset(); }}
+                                    className="flex-1 py-3 px-6 border border-gray-300 text-gray-700 font-medium rounded-xl hover:bg-gray-50 transition-colors cursor-pointer"
                                 >
                                     Cancel
                                 </button>
                                 <button
-                                    onClick={() => onDelete(deleteConfirm.id)}
-                                    className="flex-1 py-3.5 rounded-xl bg-rose-600 text-white font-black hover:bg-rose-700 shadow-lg shadow-rose-600/30 active:scale-95 transition-all"
+                                    type="submit"
+                                    disabled={paying}
+                                    className="flex-1 py-3 px-6 bg-gradient-to-r from-blue-600 to-emerald-500 text-white font-bold rounded-xl hover:from-blue-700 hover:to-emerald-600 transition-all shadow-lg disabled:opacity-60 flex items-center justify-center gap-2 cursor-pointer"
                                 >
-                                    Delete
+                                    {paying ? (
+                                        <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin " />
+                                    ) : (
+                                        'Confirm Payment'
+                                    )}
                                 </button>
                             </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+
+            {/* 2. Add New Debt Modal */}
+            {addModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/60 backdrop-blur-sm animate-fade-in overflow-y-auto">
+                    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden animate-slide-up border border-gray-100" onClick={e => e.stopPropagation()}>
+                        {/* Gradient Header */}
+                        <div className="bg-gradient-to-r from-blue-600 to-emerald-500 px-6 py-6 text-white rounded-t-2xl">
+                            <div className="flex items-center justify-between">
+                                <h2 className="text-xl font-bold tracking-tight">Add New Debt</h2>
+                                <button
+                                    onClick={() => { setAddModal(false); reset(); }}
+                                    className="text-white hover:bg-white/20 p-1.5 rounded-full transition-colors"
+                                >
+                                    <X size={22} />
+                                </button>
+                            </div>
+                            <p className="text-sm text-blue-100 mt-1 opacity-90">Enter details for a new business debt record</p>
+                        </div>
+
+                        <form onSubmit={handleSubmit(async (data) => {
+                            setAdding(true);
+                            try {
+                                await api.post('/debts', data);
+                                toast.success('Debt record created!');
+                                setAddModal(false);
+                                reset();
+                                fetchData();
+                            } catch (e) {
+                                toast.error(e.response?.data?.message || 'Error creating debt');
+                            } finally { setAdding(false); }
+                        })} className="p-6 space-y-6">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div className="relative">
+                                    <input
+                                        {...register('customer_name', { required: 'Name is required' })}
+                                        id="customer_name"
+                                        className="peer w-full px-4 pt-6 pb-2 rounded-xl border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all outline-none bg-white font-medium"
+                                        placeholder=" "
+                                    />
+                                    <label
+                                        htmlFor="customer_name"
+                                        className="absolute left-4 top-2 text-xs text-gray-500 transition-all peer-placeholder-shown:text-base peer-placeholder-shown:top-4 peer-focus:top-2 peer-focus:text-xs peer-focus:text-blue-600 pointer-events-none"
+                                    >
+                                        Customer Name <span className="text-red-500">*</span>
+                                    </label>
+                                    {errors.customer_name && <p className="text-rose-600 text-[10px] mt-1 font-bold underline decoration-rose-200">{errors.customer_name.message}</p>}
+                                </div>
+
+                                <div className="relative">
+                                    <input
+                                        {...register('customer_phone', { required: 'Phone is required' })}
+                                        id="customer_phone"
+                                        className="peer w-full px-4 pt-6 pb-2 rounded-xl border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all outline-none bg-white font-medium"
+                                        placeholder=" "
+                                    />
+                                    <label
+                                        htmlFor="customer_phone"
+                                        className="absolute left-4 top-2 text-xs text-gray-500 transition-all peer-placeholder-shown:text-base peer-placeholder-shown:top-4 peer-focus:top-2 peer-focus:text-xs peer-focus:text-blue-600 pointer-events-none"
+                                    >
+                                        Phone Number <span className="text-red-500">*</span>
+                                    </label>
+                                    {errors.customer_phone && <p className="text-rose-600 text-[10px] mt-1 font-bold underline decoration-rose-200">{errors.customer_phone.message}</p>}
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div className="relative">
+                                    <input
+                                        {...register('amount', { required: 'Amount required', min: 0.01 })}
+                                        id="amount"
+                                        type="number"
+                                        step="0.01"
+                                        className="peer w-full px-4 pt-6 pb-2 rounded-xl border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all outline-none bg-white font-bold"
+                                        placeholder=" "
+                                    />
+                                    <label
+                                        htmlFor="amount"
+                                        className="absolute left-4 top-2 text-xs text-gray-500 transition-all peer-placeholder-shown:text-base peer-placeholder-shown:top-4 peer-focus:top-2 peer-focus:text-xs peer-focus:text-blue-600 pointer-events-none"
+                                    >
+                                        Total Amount (ETB) <span className="text-red-500">*</span>
+                                    </label>
+                                </div>
+
+                                <div className="relative">
+                                    <input
+                                        {...register('paid_amount')}
+                                        id="paid_amount"
+                                        type="number"
+                                        step="0.01"
+                                        className="peer w-full px-4 pt-6 pb-2 rounded-xl border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all outline-none bg-white font-medium"
+                                        placeholder=" "
+                                    />
+                                    <label
+                                        htmlFor="paid_amount"
+                                        className="absolute left-4 top-2 text-xs text-gray-500 transition-all peer-placeholder-shown:text-base peer-placeholder-shown:top-4 peer-focus:top-2 peer-focus:text-xs peer-focus:text-blue-600 pointer-events-none"
+                                    >
+                                        Paid amount
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div className="relative">
+                                    <select
+                                        {...register('payment_method')}
+                                        id="payment_method"
+                                        className="peer w-full px-4 pt-6 pb-2 rounded-xl border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all outline-none bg-white appearance-none"
+                                    >
+                                        <option value="cash">Cash</option>
+                                        <option value="ebirr">Ebirr</option>
+                                        <option value="ebirr_kaafi">Ebirr Kaafi</option>
+                                        <option value="card">Card</option>
+                                        <option value="bank_transfer">Bank Transfer</option>
+                                    </select>
+                                    <label
+                                        htmlFor="payment_method"
+                                        className="absolute left-4 top-2 text-xs text-gray-500 transition-all peer-placeholder-shown:text-base peer-placeholder-shown:top-4 peer-focus:top-2 peer-focus:text-xs peer-focus:text-blue-600 pointer-events-none"
+                                    >
+                                        Initial Payment Method
+                                    </label>
+                                </div>
+
+                                <div className="relative">
+                                    <input
+                                        {...register('due_date')}
+                                        id="due_date"
+                                        type="date"
+                                        className="peer w-full px-4 pt-6 pb-2 rounded-xl border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all outline-none bg-white"
+                                    />
+                                    <label
+                                        htmlFor="due_date"
+                                        className="absolute left-4 top-2 text-xs text-gray-500 transition-all peer-placeholder-shown:text-base peer-placeholder-shown:top-4 peer-focus:top-2 peer-focus:text-xs peer-focus:text-blue-600 pointer-events-none"
+                                    >
+                                        Due Date
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div className="relative">
+                                <textarea
+                                    {...register('notes')}
+                                    id="notes"
+                                    className="peer w-full px-4 pt-8 pb-3 rounded-xl border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all outline-none bg-white resize-none min-h-[100px]"
+                                    placeholder=" "
+                                />
+                                <label
+                                    htmlFor="notes"
+                                    className="absolute left-4 top-2 text-xs text-gray-500 transition-all peer-placeholder-shown:text-base peer-placeholder-shown:top-6 peer-focus:top-2 peer-focus:text-xs peer-focus:text-blue-600 pointer-events-none"
+                                >
+                                    Notes (Optional)
+                                </label>
+                            </div>
+
+                            <div className="flex gap-4 pt-6 border-t border-gray-100">
+                                <button
+                                    type="button"
+                                    onClick={() => { setAddModal(false); reset(); }}
+                                    className="flex-1 py-3 px-6 border border-gray-300 text-gray-700 font-medium rounded-xl hover:bg-gray-50 transition-colors"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    type="submit"
+                                    disabled={adding}
+                                    className="flex-1 py-3 px-6 bg-gradient-to-r from-blue-600 to-emerald-500 text-white font-bold rounded-xl hover:from-blue-700 hover:to-emerald-600 transition-all shadow-lg disabled:opacity-60 flex items-center justify-center gap-2"
+                                >
+                                    {adding ? (
+                                        <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                                    ) : (
+                                        'Create Debt Record'
+                                    )}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+
+            {/* 3. Delete Confirmation Modal */}
+            {deleteConfirm && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/60 backdrop-blur-sm animate-fade-in">
+                    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-8 animate-slide-up border border-gray-100 text-center" onClick={e => e.stopPropagation()}>
+                        <div className="w-20 h-20 bg-rose-50 text-rose-600 rounded-full flex items-center justify-center mx-auto mb-6 border-4 border-rose-100 shadow-inner">
+                            <Trash2 size={36} strokeWidth={2.5} className="animate-pulse" />
+                        </div>
+                        <h2 className="text-xl font-black text-gray-900 mb-3 tracking-tight">Delete Record?</h2>
+                        <p className="text-sm text-gray-500 mb-8 leading-relaxed">
+                            Are you sure you want to delete the debt record for <span className="font-bold text-gray-900 underline decoration-rose-200">{deleteConfirm.customer?.name || deleteConfirm.customer_name}</span>? This action is irreversible.
+                        </p>
+                        <div className="flex gap-4">
+                            <button
+                                onClick={() => setDeleteConfirm(null)}
+                                className="flex-1 py-3.5 rounded-xl border border-gray-200 text-gray-600 font-bold hover:bg-gray-50 transition-all active:scale-95 cursor-pointer"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={() => onDelete(deleteConfirm.id)}
+                                className="flex-1 py-3.5 rounded-xl bg-rose-600 text-white font-black hover:bg-rose-700 shadow-lg shadow-rose-600/30 active:scale-95 transition-all cursor-pointer"
+                            >
+                                Delete
+                            </button>
                         </div>
                     </div>
-                )}
+                </div>
+            )}
         </div>
     );
 }

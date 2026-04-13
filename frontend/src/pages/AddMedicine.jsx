@@ -462,7 +462,7 @@ export default function AddMedicine() {
                             <button
                                 type="button"
                                 onClick={() => navigate('/medicines')}
-                                className="px-6 py-3 border border-gray-300 text-gray-700 font-medium rounded-xl hover:bg-gray-50 transition-colors flex-1 flex items-center justify-center gap-4 min-w-[160px]"
+                                className="px-6 py-3 border border-gray-300 text-gray-700 font-medium rounded-xl hover:bg-gray-50 transition-colors flex-1 flex items-center justify-center gap-4 min-w-[160px] cursor-pointer"
                                 disabled={isSubmitting}
                             >
                                 Cancel
@@ -470,7 +470,7 @@ export default function AddMedicine() {
                             <button
                                 type="submit"
                                 disabled={isSubmitting}
-                                className="px-8 py-3 bg-gradient-to-r from-blue-600 to-emerald-500 text-white font-medium rounded-xl hover:from-blue-600 hover:to-emerald-600 transition-all shadow-md disabled:opacity-60 flex-1 flex items-center justify-center gap-4 min-w-[160px]"
+                                className="px-8 py-3 bg-gradient-to-r from-blue-600 to-emerald-500 text-white font-medium rounded-xl hover:from-blue-600 hover:to-emerald-600 transition-all shadow-md disabled:opacity-60 flex-1 flex items-center justify-center gap-4 min-w-[160px] cursor-pointer"
                             >
                                 {isSubmitting ? (
                                     <>

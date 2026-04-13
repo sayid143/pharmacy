@@ -273,8 +273,8 @@ export default function Medicines() {
                         <h3 className="text-xl font-bold text-gray-900 text-center mb-2">Delete Medicine?</h3>
                         <p className="text-gray-500 text-sm text-center mb-6">Are you sure you want to delete this medicine? This action cannot be undone and will remove it from inventory.</p>
                         <div className="flex gap-3">
-                            <button onClick={() => setDeleteId(null)} className="btn-secondary flex-1 py-2.5">Cancel</button>
-                            <button onClick={() => handleDelete(deleteId)} className="btn-danger flex-1 py-2.5">Delete</button>
+                            <button onClick={() => setDeleteId(null)} className="btn-secondary flex-1 py-2.5 cursor-pointer">Cancel</button>
+                            <button onClick={() => handleDelete(deleteId)} className="btn-danger flex-1 py-2.5 cursor-pointer">Delete</button>
                         </div>
                     </div>
                 </div>

@@ -601,7 +601,7 @@ export default function Transactions() {
                                                 <div className="flex items-center justify-end gap-1.5">
                                                     <button
                                                         onClick={() => openDetail(tx)}
-                                                        className="flex items-center gap-1.5 px-2 py-1.5 rounded bg-blue-50/80 text-blue-700 hover:bg-blue-100/80 text-[11px] font-bold transition-all"
+                                                        className="flex items-center gap-1.5 px-2 py-1.5 rounded bg-blue-50/80 text-blue-700 hover:bg-blue-100/80 text-[11px] font-bold transition-all cursor-pointer"
                                                         title="View details"
                                                     >
                                                         <Eye size={12} /> View
@@ -684,7 +684,7 @@ export default function Transactions() {
                             </div>
                             <button
                                 onClick={closeModal}
-                                className="p-2 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-xl transition-all"
+                                className="p-2 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-xl transition-all cursor-pointer"
                             >
                                 <X size={20} />
                             </button>
