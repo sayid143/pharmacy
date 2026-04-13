@@ -257,13 +257,13 @@ export default function UsersList() {
                                     </td>
                                     <td className="px-4 py-2.5 text-right whitespace-nowrap">
                                         <div className="flex items-center justify-end gap-2">
-                                            <button onClick={() => openEditModal(user)} className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors" title="Edit User">
+                                            <button onClick={() => openEditModal(user)} className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors cursor-pointer " title="Edit User">
                                                 <Edit2 size={16} />
                                             </button>
-                                            <button onClick={() => openPasswordModal(user)} className="p-2 text-amber-600 hover:bg-amber-50 rounded-lg transition-colors" title="Reset Password">
+                                            <button onClick={() => openPasswordModal(user)} className="p-2 text-amber-600 hover:bg-amber-50 rounded-lg transition-colors cursor-pointer" title="Reset Password">
                                                 <Key size={16} />
                                             </button>
-                                            <button onClick={() => setStatusConfirm(user)} className={`p-2 rounded-lg transition-colors ${user.is_active ? 'text-red-500 hover:bg-red-50' : 'text-emerald-600 hover:bg-emerald-50'}`} title={user.is_active ? "Deactivate User" : "Activate User"}>
+                                            <button onClick={() => setStatusConfirm(user)} className={`p-2 rounded-lg transition-colors cursor-pointer ${user.is_active ? 'text-red-500 hover:bg-red-50' : 'text-emerald-600 hover:bg-emerald-50'}`} title={user.is_active ? "Deactivate User" : "Activate User"}>
                                                 {user.is_active ? <Trash2 size={16} /> : <CheckCircle2 size={16} />}
                                             </button>
                                         </div>
@@ -458,7 +458,7 @@ export default function UsersList() {
                             <div className={`w-14 h-14 rounded-full flex items-center justify-center ${statusConfirm.is_active ? 'bg-rose-100 text-rose-600' : 'bg-emerald-100 text-emerald-600'}`}>
                                 <AlertTriangle size={28} />
                             </div>
-                            <h3 className="text-lg font-bold text-gray-900">
+                            <h3 className="text-lg font-bold text-gray-900 ">
                                 {statusConfirm.is_active ? 'Deactivate User?' : 'Activate User?'}
                             </h3>
                             <p className="text-sm text-gray-500">
@@ -480,7 +480,7 @@ export default function UsersList() {
                                 <button
                                     onClick={handleToggleStatus}
                                     disabled={changingStatus}
-                                    className={`flex-1 py-2.5 rounded-xl text-white font-bold transition-all disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer shadow-sm
+                                    className={`flex-1 py-2.5 rounded-xl text-white font-bold transition-all disabled:opacity-50 flex items-center justify-center gap-2  shadow-sm 
                                         ${statusConfirm.is_active ? 'bg-rose-600 hover:bg-rose-700 shadow-rose-200' : 'bg-emerald-600 hover:bg-emerald-700 shadow-emerald-200'}`}
                                 >
                                     {changingStatus ? (

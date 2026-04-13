@@ -517,7 +517,7 @@ export default function Sales() {
                                                         </div>
                                                         <button
                                                             onClick={() => removeMultiCartItem(item.id)}
-                                                            className="absolute top-2 right-2 w-6 h-6 bg-red-50 text-red-400 hover:bg-red-500 hover:text-white rounded-full flex items-center justify-center transition-all opacity-0 group-hover:opacity-100"
+                                                            className="absolute top-2 right-2 w-6 h-6 bg-red-50 text-red-400 hover:bg-red-500 hover:text-white rounded-full flex items-center justify-center transition-all opacity-0 group-hover:opacity-100 cursor-pointer"
                                                         >
                                                             <Trash2 size={12} />
                                                         </button>
@@ -527,9 +527,9 @@ export default function Sales() {
                                                         <div className="flex-1">
                                                             <label className="text-[8px] font-black text-gray-400 uppercase tracking-widest block mb-0.5 ml-1">Quantity</label>
                                                             <div className="flex items-center border border-gray-200 rounded-md overflow-hidden h-7 bg-white">
-                                                                <button onClick={() => updateMultiQty(item.id, -1)} className="w-7 h-full hover:bg-gray-50 text-gray-400 border-r text-sm font-bold transition-colors">−</button>
+                                                                <button onClick={() => updateMultiQty(item.id, -1)} className="w-7 h-full hover:bg-gray-50 text-gray-400 border-r text-sm font-bold transition-colors cursor-pointer">−</button>
                                                                 <span className="flex-1 text-center text-xs font-black text-gray-800">{item.qty}</span>
-                                                                <button onClick={() => updateMultiQty(item.id, 1)} className="w-7 h-full hover:bg-gray-50 text-gray-400 border-l text-sm font-bold transition-colors">+</button>
+                                                                <button onClick={() => updateMultiQty(item.id, 1)} className="w-7 h-full hover:bg-gray-50 text-gray-400 border-l text-sm font-bold transition-colors cursor-pointer">+</button>
                                                             </div>
                                                         </div>
                                                         <div className="flex-1">
@@ -563,7 +563,7 @@ export default function Sales() {
                                 </div>
 
                                 <button onClick={processMultiSale} disabled={!multiCart.length}
-                                    className="w-full h-12 bg-gradient-to-r from-teal-400 to-emerald-500 hover:from-teal-500 hover:to-emerald-600 disabled:opacity-50 text-white rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-all shadow-md active:scale-[0.98]">
+                                    className="w-full h-12 bg-gradient-to-r from-blue-600 to-emerald-500 hover:from-blue-700 hover:to-emerald-600 disabled:opacity-50 text-white rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-all shadow-md active:scale-[0.98] cursor-pointer">
                                     <ShoppingCart size={18} /> Process Multi-Sale
                                 </button>
                             </div>
@@ -584,12 +584,12 @@ export default function Sales() {
                                 </label>
                                 <label className="flex items-center gap-1.5 cursor-pointer">
                                     <input type="checkbox" checked={isUnpaid}
-                                        onChange={e => { setIsUnpaid(e.target.checked); if (e.target.checked) setAmountPaid('0'); }}
+                                        onChange={e => { setIsUnpaid(e.target.checked); if (e.target.checked) setAmountPaid('0'); else setAmountPaid(''); }}
                                         className="w-4 h-4 rounded text-blue-600 border-gray-300" />
                                     <span className={`text-xs font-black uppercase tracking-tighter px-2 py-0.5 rounded ${isUnpaid ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-500'}`}>UNPAID</span>
                                 </label>
                                 <span className="bg-blue-50 text-blue-600 px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest">{cart.length} items</span>
-                                <button onClick={() => navigate('/transactions')} className="text-blue-500 hover:text-blue-700 text-xs font-bold transition-colors">View Transactions</button>
+                                <button onClick={() => navigate('/transactions')} className="text-blue-500 hover:text-blue-700 text-xs font-bold transition-colors cursor-pointer">View Transactions</button>
                             </div>
                         </div>
 
@@ -647,7 +647,7 @@ export default function Sales() {
                                     <div className="flex items-center gap-2">
                                         <span className="text-[9px] font-black text-blue-700 bg-blue-50 px-2 py-0.5 rounded border border-blue-100 uppercase">SET PAID TO 0</span>
                                         <input type="checkbox" checked={isUnpaid}
-                                            onChange={e => { setIsUnpaid(e.target.checked); if (e.target.checked) setAmountPaid('0'); }}
+                                            onChange={e => { setIsUnpaid(e.target.checked); if (e.target.checked) setAmountPaid('0'); else setAmountPaid(''); }}
                                             className="w-4 h-4 rounded text-blue-600 border-gray-300 cursor-pointer" />
                                     </div>
                                 </div>
@@ -684,7 +684,7 @@ export default function Sales() {
                                     </div>
 
                                     {/* These flow seamlessly into the exact same grid when needed */}
-                                    {(isUnpaid || (amountPaid && amountPaid.trim() !== '')) && (
+                                    {(isUnpaid || isPartial) && (
                                         <>
                                             <div className="animate-fade-in relative">
                                                 <label className="text-[10px] font-black text-blue-600 uppercase tracking-widest block mb-1.5">Customer Name Request</label>
@@ -709,7 +709,7 @@ export default function Sales() {
                             </div>
 
                             {/* Change Due + Complete */}
-                            {(isUnpaid || (amountPaid && amountPaid.trim() !== '')) && (
+                            {(isUnpaid || (amountPaid !== '' && amountPaid != null)) && (
                                 <div className="mt-5 flex items-center justify-between px-5 py-3 bg-emerald-50 rounded-xl border border-emerald-100 animate-fade-in">
                                     <div>
                                         <p className="text-[9px] font-black text-emerald-600 uppercase tracking-widest">Change Due</p>
@@ -723,7 +723,7 @@ export default function Sales() {
                             )}
 
                             <button onClick={handleCheckout} disabled={processing || !cart.length}
-                                className="mt-3 w-full h-14 bg-gradient-to-r from-blue-600 to-emerald-500 hover:from-blue-700 hover:to-emerald-600 disabled:opacity-50 text-white rounded-xl font-black text-lg transition-all shadow-lg shadow-blue-500/25 active:scale-[0.98] flex items-center justify-center gap-3 cu">
+                                className="mt-3 w-full h-14 bg-gradient-to-r from-blue-600 to-emerald-500 hover:from-blue-700 hover:to-emerald-600 disabled:opacity-50 text-white rounded-xl font-black text-lg transition-all shadow-lg shadow-blue-500/25 active:scale-[0.98] flex items-center justify-center gap-3 cursor-pointer">
                                 {processing ? <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin" /> : <><ShoppingCart size={22} /> Complete Sale</>}
                             </button>
                         </div>
