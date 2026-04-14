@@ -107,7 +107,7 @@ export default function Login() {
                     <button
                         type="submit"
                         disabled={isLoading}
-                        className="w-full h-14 bg-gradient-to-r from-blue-600 to-emerald-500 hover:from-blue-700 hover:to-emerald-600 text-white rounded-2xl font-black text-lg shadow-xl shadow-blue-500/20 transition-all active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-3 mt-6"
+                        className="w-full h-14 bg-gradient-to-r from-blue-600 to-emerald-500 hover:from-blue-700 hover:to-emerald-600 text-white rounded-2xl font-black text-lg shadow-xl shadow-blue-500/20 transition-all active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-3 mt-6 cursor-pointer"
                     >
                         {isLoading ? (
                             <div className="w-6 h-6 border-3 border-white/30 border-t-white rounded-full animate-spin" />
@@ -121,7 +121,7 @@ export default function Login() {
                 </form>
 
                 <div className="mt-8 text-center animate-fade-in" style={{ animationDelay: '0.2s' }}>
-                    <p className="text-gray-500 font-medium">
+                    {/* <p className="text-gray-500 font-medium">
                         Don't have an account?{' '}
                         <Link
                             to="/signup"
@@ -129,7 +129,7 @@ export default function Login() {
                         >
                             Create Account
                         </Link>
-                    </p>
+                    </p> */}
                 </div>
             </div>
         </div>
