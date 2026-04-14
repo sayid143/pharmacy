@@ -305,7 +305,7 @@ export default function Sales() {
         <div className="space-y-6 animate-fade-in pb-10">
 
             {/* Stat Cards */}
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 <div className="card p-4 flex items-center justify-between border-l-4 border-l-emerald-400">
                     <div>
                         <p className="text-xs text-gray-500 font-medium mb-1">Today's Sales</p>
@@ -664,7 +664,7 @@ export default function Sales() {
                                     <h3 className="text-xs font-black text-gray-800 uppercase tracking-widest">Sale Registration Details</h3>
                                 </div>
 
-                                <div className="grid grid-cols-2 gap-x-5 gap-y-5">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-5 gap-y-5">
                                     <div>
                                         <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest block mb-1.5">Amount Paid (ETB)</label>
                                         <input type="number" value={amountPaid} onChange={e => setAmountPaid(e.target.value)} placeholder="0.00"

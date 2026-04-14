@@ -131,7 +131,7 @@ export default function Customers() {
             {/* Data Table */}
             <div className="card overflow-hidden">
                 <div className="overflow-x-auto w-full">
-                    <table className="w-full text-left text-sm whitespace-nowrap">
+                    <table className="w-full text-left text-sm whitespace-nowrap min-w-[800px]">
                         <thead className="bg-gray-50 border-b border-gray-100 text-gray-500 uppercase tracking-wider text-xs font-semibold">
                             <tr>
                                 <th className="px-6 py-4">Customer Info</th>

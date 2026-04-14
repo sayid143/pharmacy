@@ -211,7 +211,7 @@ export default function Dashboard() {
                 <div className="card p-5 overflow-hidden">
                     <h2 className="text-lg font-bold text-gray-900 mb-6 font-display">Recent Transactions</h2>
                     <div className="overflow-x-auto">
-                        <table className="w-full text-left">
+                        <table className="w-full text-left min-w-[700px]">
                             <thead className="bg-[#e6f4fe] text-sky-700 uppercase tracking-widest text-[11px] font-bold">
                                 <tr>
                                     <th className="px-3 py-3">Invoice</th>

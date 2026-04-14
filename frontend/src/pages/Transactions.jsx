@@ -475,14 +475,14 @@ export default function Transactions() {
                         </div>
                     )}
 
-                    <div className="relative ml-auto">
+                    <div className="relative ml-auto w-full sm:w-auto">
                         <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
                         <input
                             type="text"
                             value={searchQuery}
                             onChange={e => setSearchQuery(e.target.value)}
                             placeholder="Search by Invoice # or ID..."
-                            className="pl-9 pr-4 py-2 border border-gray-200 rounded-xl text-sm focus:border-blue-400 outline-none w-64"
+                            className="pl-9 pr-4 py-2 border border-gray-200 rounded-xl text-sm focus:border-blue-400 outline-none w-full sm:w-64"
                         />
                         {searchQuery && (
                             <button
@@ -520,7 +520,7 @@ export default function Transactions() {
                     </div>
                 ) : (
                     <div className="overflow-x-auto w-full">
-                        <table className="w-full text-left text-sm border-separate" style={{ borderSpacing: '0' }}>
+                        <table className="w-full text-left text-sm border-separate min-w-[1000px]" style={{ borderSpacing: '0' }}>
                             <thead className="bg-[#e6f4fe] text-sky-700 capitalize tracking-wide text-[13px] font-semibold sticky top-0 z-20 shadow-[0_4px_8px_-2px_rgba(0,0,0,0.05)]">
                                 <tr>
                                     <th className="px-4 py-3 whitespace-nowrap">Invoice #</th>

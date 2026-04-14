@@ -374,7 +374,7 @@ export default function Reports() {
                             <span className="text-xs text-gray-400">Total: {allTransactions.length}</span>
                         </div>
                         <div className="overflow-x-auto">
-                            <table className="w-full text-sm text-left border-collapse">
+                            <table className="w-full text-sm text-left border-collapse min-w-[800px]">
                                 <thead className="bg-[#e6f4fe] text-sky-700 capitalize tracking-wide text-[13px] font-semibold sticky top-0 z-20 shadow-[0_4px_8px_-2px_rgba(0,0,0,0.05)]">
                                     <tr>
                                         <th className="px-4 py-3">Date</th>

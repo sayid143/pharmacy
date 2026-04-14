@@ -258,7 +258,7 @@ export default function Expenses() {
                 </div>
 
                 <div className="overflow-x-auto w-full">
-                    <table className="w-full text-left text-sm border-separate" style={{ borderSpacing: '0' }}>
+                    <table className="w-full text-left text-sm border-separate min-w-[800px]" style={{ borderSpacing: '0' }}>
                         <thead className="bg-[#e6f4fe] text-sky-700 capitalize tracking-wide text-[13px] font-semibold sticky top-0 z-20 shadow-[0_4px_8px_-2px_rgba(0,0,0,0.05)]">
                             <tr>
                                 <th className="px-4 py-3 whitespace-nowrap">Date</th>
