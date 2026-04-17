@@ -331,6 +331,26 @@ export default function Reports() {
                     </div>
                 </div>
 
+                {/* Debt & Reconciliation Cards */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8 print:grid-cols-4 print:gap-3 print:mb-8">
+                    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 print:p-4 print:border-gray-200">
+                        <p className="text-[11px] text-gray-500 font-bold uppercase tracking-wider print:text-[10pt]">Actual Collected</p>
+                        <p className="text-xl font-black text-green-600 mt-1 print:text-[14pt]">ETB {Number(summary.actual_collected || 0).toLocaleString()}</p>
+                    </div>
+                    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 print:p-4 print:border-gray-200">
+                        <p className="text-[11px] text-gray-500 font-bold uppercase tracking-wider print:text-[10pt]">Full Debt (0 Paid)</p>
+                        <p className="text-xl font-black text-red-600 mt-1 print:text-[14pt]">ETB {Number(summary.full_debt || 0).toLocaleString()}</p>
+                    </div>
+                    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 print:p-4 print:border-gray-200">
+                        <p className="text-[11px] text-gray-500 font-bold uppercase tracking-wider print:text-[10pt]">Partial Debt</p>
+                        <p className="text-xl font-black text-orange-500 mt-1 print:text-[14pt]">ETB {Number(summary.partial_debt || 0).toLocaleString()}</p>
+                    </div>
+                    <div className="bg-white rounded-2xl shadow-sm border-l-4 border-l-red-600 p-4 print:p-4 print:border-l-2">
+                        <p className="text-[11px] text-gray-500 font-bold uppercase tracking-wider print:text-[10pt]">Total Uncollected</p>
+                        <p className="text-xl font-black text-gray-900 mt-1 print:text-[14pt]">ETB {Number(summary.total_uncollected_debt || 0).toLocaleString()}</p>
+                    </div>
+                </div>
+
                 {/* Charts Area (Only first chart on print) */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-10 print:block print:mb-12">
                     <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 print:border-gray-200">
@@ -347,20 +367,56 @@ export default function Reports() {
                             </ResponsiveContainer>
                         </div>
                     </div>
-                    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 print:hidden">
-                        <h3 className="text-lg font-semibold mb-6">Payment Methods</h3>
-                        <div className="h-80">
-                            <ResponsiveContainer>
-                                <PieChart>
-                                    <Pie data={paymentBreakdown} cx="50%" cy="50%" innerRadius={70} outerRadius={100} dataKey="total">
-                                        {paymentBreakdown.map((_, i) => (
-                                            <Cell key={i} fill={COLORS[i % COLORS.length]} />
-                                        ))}
-                                    </Pie>
-                                    <Tooltip content={<CustomTooltip />} />
-                                    <Legend />
-                                </PieChart>
-                            </ResponsiveContainer>
+                    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 print:border-gray-200 break-inside-avoid">
+                        <h3 className="text-lg font-semibold mb-6">Payment Methods (Collected)</h3>
+                        <div className="flex flex-col lg:flex-row gap-6">
+                            <div className="h-48 sm:h-64 flex-1 print:hidden">
+                                <ResponsiveContainer>
+                                    <PieChart>
+                                        <Pie data={paymentBreakdown} cx="50%" cy="50%" innerRadius={50} outerRadius={80} dataKey="total">
+                                            {paymentBreakdown.map((_, i) => (
+                                                <Cell key={i} fill={COLORS[i % COLORS.length]} />
+                                            ))}
+                                        </Pie>
+                                        <Tooltip content={<CustomTooltip />} />
+                                        <Legend />
+                                    </PieChart>
+                                </ResponsiveContainer>
+                            </div>
+                            <div className="flex-1 overflow-x-auto w-full">
+                                <table className="w-full text-sm text-left border-collapse border border-gray-100">
+                                    <thead className="bg-[#e6f4fe] text-sky-700 capitalize tracking-wide text-[12px] font-semibold">
+                                        <tr>
+                                            <th className="px-4 py-2 border-b">Method</th>
+                                            <th className="px-4 py-2 text-right border-b">Collected Amount</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-gray-100">
+                                        {paymentBreakdown.length > 0 ? (
+                                            paymentBreakdown.map((p, idx) => (
+                                                <tr key={idx} className="border-b border-gray-100">
+                                                    <td className="px-4 py-3 font-medium uppercase text-gray-700">
+                                                        {p.name}
+                                                    </td>
+                                                    <td className="px-4 py-3 text-right font-bold text-gray-900">
+                                                        ETB {Number(p.total).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                                                    </td>
+                                                </tr>
+                                            ))
+                                        ) : (
+                                            <tr><td colSpan="2" className="px-4 py-4 text-center text-gray-400">No payment data</td></tr>
+                                        )}
+                                        {paymentBreakdown.length > 0 && (
+                                            <tr className="bg-gray-50 border-t-2 border-gray-200">
+                                                <td className="px-4 py-3 font-bold uppercase text-gray-900">Total</td>
+                                                <td className="px-4 py-3 text-right font-black text-blue-700">
+                                                    ETB {Number(summary.actual_collected || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                                                </td>
+                                            </tr>
+                                        )}
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
                     </div>
                 </div>

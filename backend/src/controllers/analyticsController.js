@@ -410,16 +410,50 @@ const getDetailedReportData = async (whereSales, whereExpenses, replacements, ty
         const totalExpenses = expenses.reduce((acc, e) => acc + parseFloat(e.get('total') || 0), 0);
         logger.info(`[Reports] ${type} total expenses: ${totalExpenses}`);
 
-        // 3. Payment Method Breakdown
-        const paymentBreakdown = await db.Sale.findAll({
-            where: whereSales,
-            attributes: [
-                ['payment_method', 'name'],
-                [db.sequelize.fn('COUNT', db.sequelize.col('id')), 'count'],
-                [db.sequelize.fn('SUM', db.sequelize.col('total_amount')), 'total']
-            ],
-            group: ['payment_method']
+        // 3. ACTUAL Collected Money Payment Breakdown & Debt Stats
+        const salesCollected = await db.sequelize.query(
+            `SELECT payment_method as name, SUM(amount_paid) as total_collected
+             FROM sales
+             WHERE status = 'completed' AND created_at >= ? AND created_at <= ?
+             GROUP BY payment_method`,
+            { replacements, type: QueryTypes.SELECT }
+        );
+
+        const paymentsCollected = await db.sequelize.query(
+            `SELECT payment_method as name, SUM(amount) as total_collected
+             FROM payments
+             WHERE created_at >= ? AND created_at <= ?
+             GROUP BY payment_method`,
+            { replacements, type: QueryTypes.SELECT }
+        );
+
+        const actualCollectedMap = {};
+        let totalActualCollected = 0;
+
+        [...salesCollected, ...paymentsCollected].forEach(item => {
+            const method = item.name || 'other';
+            const amount = parseFloat(item.total_collected || 0);
+            actualCollectedMap[method] = (actualCollectedMap[method] || 0) + amount;
+            totalActualCollected += amount;
         });
+
+        const unifiedCollectedBreakdown = Object.keys(actualCollectedMap).map(key => ({
+            name: key,
+            total: actualCollectedMap[key],
+            count: 0 // Optional filler if count isn't strictly needed for collection graphs
+        }));
+
+        // Fetch Debt Stats generated in this period
+        const debtsGenerated = await db.sequelize.query(
+            `SELECT 
+                SUM(CASE WHEN paid_amount = 0 THEN balance ELSE 0 END) as full_debt,
+                SUM(CASE WHEN paid_amount > 0 AND balance > 0 THEN balance ELSE 0 END) as partial_debt,
+                SUM(CASE WHEN balance > 0 THEN balance ELSE 0 END) as total_uncollected
+             FROM debts
+             WHERE status != 'cancelled' AND created_at >= ? AND created_at <= ?`,
+            { replacements, type: QueryTypes.SELECT }
+        );
+        const debtStats = (debtsGenerated && debtsGenerated.length > 0) ? debtsGenerated[0] : { full_debt: 0, partial_debt: 0, total_uncollected: 0 };
 
         // 4. Detailed Sales Trend (Revenue & Profit per day)
         const salesTrend = await db.sequelize.query(
@@ -496,14 +530,16 @@ const getDetailedReportData = async (whereSales, whereExpenses, replacements, ty
                 total_profit: parseFloat(stats?.gross_profit || 0),
                 total_loss: parseFloat(stats?.gross_loss || 0),
                 total_expenses: totalExpenses,
-                net_profit: parseFloat(stats?.gross_profit || 0) - parseFloat(stats?.gross_loss || 0) - totalExpenses
+                net_profit: parseFloat(stats?.gross_profit || 0) - parseFloat(stats?.gross_loss || 0) - totalExpenses,
+                
+                // --- NEW RECONCILIATION METRICS ---
+                actual_collected: totalActualCollected,
+                full_debt: parseFloat(debtStats.full_debt || 0),
+                partial_debt: parseFloat(debtStats.partial_debt || 0),
+                total_uncollected_debt: parseFloat(debtStats.total_uncollected || 0)
             },
             sales_trend: salesTrend,
-            payment_breakdown: paymentBreakdown.map(p => ({
-                name: p.get('name') || 'Other',
-                total: parseFloat(p.get('total') || 0),
-                count: p.get('count')
-            })),
+            payment_breakdown: unifiedCollectedBreakdown,
             expenses_by_category: expenses.map(e => ({
                 category: e.category,
                 total: parseFloat(e.get('total') || 0)
