@@ -540,6 +540,17 @@ export default function Transactions() {
                                     const badge = PAYMENT_BADGE[rawMethod] || { label: rawMethod || '—', cls: 'bg-gray-100 text-gray-600' };
                                     const isPaid = tx.payment_status === 'paid';
                                     const isRefunded = tx.status === 'refunded';
+                                    
+                                    // Calculate accurate total cost for this transaction
+                                    let totalCost = 0;
+                                    if (tx.items && tx.items.length > 0) {
+                                        tx.items.forEach(item => {
+                                            totalCost += (parseFloat(item.purchase_price) || 0) * (parseInt(item.quantity) || 0);
+                                        });
+                                    }
+                                    const profitOrLoss = parseFloat(tx.total_amount || 0) - totalCost;
+                                    const isLoss = profitOrLoss < 0 && totalCost > 0;
+
                                     return (
                                         <tr key={tx.id} className="bg-white even:bg-slate-50 hover:bg-gray-50/80 transition-colors shadow-[0_-1px_2px_rgba(0,0,0,0.05)] relative z-0 hover:z-10">
                                             <td className="px-4 py-2.5 whitespace-nowrap">
@@ -590,9 +601,15 @@ export default function Transactions() {
                                                 <div className="flex flex-col items-end">
                                                     <span className="font-bold text-emerald-600 tracking-tight">ETB {(parseFloat(tx.amount_paid) || 0).toFixed(2)}</span>
                                                     {parseFloat(tx.total_amount) > (parseFloat(tx.amount_paid) || 0) && (
-                                                        <span className="text-rose-600 font-bold text-[10px] tracking-tight mt-0.5 flex items-center justify-end gap-1">
-                                                            <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse"></span>
-                                                            ETB {(parseFloat(tx.total_amount) - (parseFloat(tx.amount_paid) || 0)).toFixed(2)}
+                                                        <span className="text-amber-600 font-bold text-[10px] tracking-tight mt-0.5 flex items-center justify-end gap-1" title="Unpaid Debt">
+                                                            <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span>
+                                                            Debt: ETB {(parseFloat(tx.total_amount) - (parseFloat(tx.amount_paid) || 0)).toFixed(2)}
+                                                        </span>
+                                                    )}
+                                                    {isLoss && (
+                                                        <span className="text-rose-600 font-black text-[10px] tracking-tight mt-1 flex items-center justify-end gap-1" title="Net Loss from Sale">
+                                                            <AlertTriangle size={11} className="text-rose-600" />
+                                                            Loss: ETB {Math.abs(profitOrLoss).toFixed(2)}
                                                         </span>
                                                     )}
                                                 </div>
