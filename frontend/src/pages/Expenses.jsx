@@ -21,6 +21,7 @@ export default function Expenses() {
     const [deleting, setDeleting] = useState(false);
 
     const [formData, setFormData] = useState({
+        title: '',
         category: '',
         amount: '',
         expense_date: format(new Date(), 'yyyy-MM-dd'),
@@ -74,7 +75,8 @@ export default function Expenses() {
     };
 
     const filteredExpenses = expenses.filter(ex =>
-        (ex.description?.toLowerCase().includes(search.toLowerCase()) ||
+        (ex.title?.toLowerCase().includes(search.toLowerCase()) ||
+            ex.description?.toLowerCase().includes(search.toLowerCase()) ||
             ex.category?.toLowerCase().includes(search.toLowerCase())) &&
         filterByDate(ex.expense_date, dateFilter)
     );
@@ -83,6 +85,7 @@ export default function Expenses() {
         if (expense) {
             setEditId(expense.id);
             setFormData({
+                title: expense.title || '',
                 category: expense.category || '',
                 amount: expense.amount || '',
                 expense_date: expense.expense_date ? format(new Date(expense.expense_date), 'yyyy-MM-dd') : format(new Date(), 'yyyy-MM-dd'),
@@ -93,7 +96,7 @@ export default function Expenses() {
         } else {
             setEditId(null);
             setFormData({
-                category: '', amount: '', expense_date: format(new Date(), 'yyyy-MM-dd'),
+                title: '', category: '', amount: '', expense_date: format(new Date(), 'yyyy-MM-dd'),
                 description: '', payment_method: 'cash', reference_number: ''
             });
         }
@@ -149,7 +152,7 @@ export default function Expenses() {
                     </div>
                     <h1 className="text-2xl font-bold text-gray-900">Income & Expense Management</h1>
                 </div>
-                <button onClick={() => openModal()} className="btn-primary flex items-center gap-2 px-5 py-2.5 rounded-lg font-medium shadow-sm">
+                <button onClick={() => openModal()} className="btn-primary flex items-center gap-2 px-5 py-2.5 rounded-lg font-medium shadow-sm cursor-pointer">
                     <Plus size={18} /> Add Expense
                 </button>
             </div>
@@ -262,6 +265,7 @@ export default function Expenses() {
                         <thead className="bg-[#e6f4fe] text-sky-700 capitalize tracking-wide text-[13px] font-semibold sticky top-0 z-20 shadow-[0_4px_8px_-2px_rgba(0,0,0,0.05)]">
                             <tr>
                                 <th className="px-4 py-3 whitespace-nowrap">Date</th>
+                                <th className="px-4 py-3 whitespace-nowrap">Title</th>
                                 <th className="px-4 py-3 whitespace-nowrap">Category</th>
                                 <th className="px-4 py-3">Description</th>
                                 <th className="px-4 py-3 text-right whitespace-nowrap">Amount</th>
@@ -272,20 +276,20 @@ export default function Expenses() {
                         <tbody className="bg-white text-[13px]">
                             {loading ? (
                                 <tr>
-                                    <td colSpan="6" className="text-center py-20 text-gray-400">
+                                    <td colSpan="7" className="text-center py-20 text-gray-400">
                                         <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-3" />
                                         Loading expenses...
                                     </td>
                                 </tr>
                             ) : filteredExpenses.length === 0 ? (
                                 <tr>
-                                    <td colSpan="6" className="text-center py-20 text-gray-500">
+                                    <td colSpan="7" className="text-center py-20 text-gray-500">
                                         <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4 border border-gray-100">
                                             <DollarSign size={24} className="text-gray-400" />
                                         </div>
                                         <p className="font-medium text-gray-800 text-lg">No expenses recorded</p>
                                         <p className="text-sm mt-1 mb-4 text-gray-500">Start tracking your business expenses.</p>
-                                        <button onClick={() => openModal()} className="btn-primary flex items-center justify-center gap-2 px-6 py-2.5 rounded-lg shadow-sm font-medium mx-auto">
+                                        <button onClick={() => openModal()} className="btn-primary flex items-center justify-center gap-2 px-6 py-2.5 rounded-lg shadow-sm font-medium mx-auto cursor-pointer">
                                             <Plus size={18} /> Add First Expense
                                         </button>
                                     </td>
@@ -294,6 +298,7 @@ export default function Expenses() {
                                 filteredExpenses.map(item => (
                                     <tr key={item.id} className="bg-white even:bg-slate-50 hover:bg-gray-50/80 transition-colors shadow-[0_-1px_2px_rgba(0,0,0,0.05)] relative z-0 hover:z-10">
                                         <td className="px-4 py-2.5 text-gray-500 font-medium whitespace-nowrap">{format(new Date(item.expense_date), 'MMM dd, yyyy')}</td>
+                                        <td className="px-4 py-2.5 font-semibold text-gray-800 whitespace-nowrap">{item.title || '—'}</td>
                                         <td className="px-4 py-2.5 whitespace-nowrap"><span className="px-2 py-1 bg-blue-50 text-blue-700 text-[10px] uppercase font-bold tracking-wider rounded border border-blue-200/50">{item.category}</span></td>
                                         <td className="px-4 py-2.5 text-gray-600 font-medium whitespace-normal min-w-[150px]">{item.description}</td>
                                         <td className="px-4 py-2.5 font-bold text-gray-900 text-right whitespace-nowrap">${Number(item.amount).toFixed(2)}</td>
@@ -343,6 +348,21 @@ export default function Expenses() {
                         </div>
 
                         <form onSubmit={handleSubmit} className="p-6 space-y-6">
+                            {/* Title Field */}
+                            <div className="relative">
+                                <input
+                                    type="text"
+                                    required
+                                    value={formData.title}
+                                    onChange={e => setFormData({ ...formData, title: e.target.value })}
+                                    placeholder=" "
+                                    className="peer w-full px-4 pt-6 pb-2 rounded-xl border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all outline-none bg-white font-semibold"
+                                />
+                                <label className="absolute left-4 top-2 text-xs text-gray-500 transition-all peer-placeholder-shown:text-base peer-placeholder-shown:top-4 peer-focus:top-2 peer-focus:text-xs peer-focus:text-blue-600 pointer-events-none">
+                                    Title <span className="text-red-500">*</span>
+                                </label>
+                            </div>
+
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                                 <div className="relative">
                                     <input
@@ -432,14 +452,14 @@ export default function Expenses() {
                                 <button
                                     type="button"
                                     onClick={() => setShowModal(false)}
-                                    className="flex-1 py-3 px-6 border border-gray-300 text-gray-700 font-medium rounded-xl hover:bg-gray-50 transition-colors"
+                                    className="flex-1 py-3 px-6 border border-gray-300 text-gray-700 font-medium rounded-xl hover:bg-gray-50 transition-colors cursor-pointer"
                                 >
                                     Cancel
                                 </button>
                                 <button
                                     type="submit"
                                     disabled={submitting}
-                                    className="flex-1 py-3 px-6 bg-gradient-to-r from-blue-600 to-blue-700 text-white font-bold rounded-xl hover:from-blue-700 hover:to-blue-800 transition-all shadow-lg disabled:opacity-60 flex items-center justify-center gap-2"
+                                    className="flex-1 py-3 px-6 bg-gradient-to-r from-blue-600 to-blue-700 text-white font-bold rounded-xl hover:from-blue-700 hover:to-blue-800 transition-all shadow-lg disabled:opacity-60 flex items-center justify-center gap-2 cursor-pointer"
                                 >
                                     {submitting ? (
                                         <>

@@ -333,15 +333,15 @@ export default function Reports() {
 
                 {/* Debt & Reconciliation Cards */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8 print:grid-cols-4 print:gap-3 print:mb-8">
-                    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 print:p-4 print:border-gray-200">
+                    <div className="bg-white rounded-2xl shadow-sm border-l-4 border-l-emerald-600 p-4 print:p-4 print:border-l-2">
                         <p className="text-[11px] text-gray-500 font-bold uppercase tracking-wider print:text-[10pt]">Actual Collected</p>
                         <p className="text-xl font-black text-green-600 mt-1 print:text-[14pt]">ETB {Number(summary.actual_collected || 0).toLocaleString()}</p>
                     </div>
-                    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 print:p-4 print:border-gray-200">
+                    <div className="bg-white rounded-2xl shadow-sm border-l-4 border-l-red-600 p-4 print:p-4 print:border-l-2">
                         <p className="text-[11px] text-gray-500 font-bold uppercase tracking-wider print:text-[10pt]">Full Debt (0 Paid)</p>
                         <p className="text-xl font-black text-red-600 mt-1 print:text-[14pt]">ETB {Number(summary.full_debt || 0).toLocaleString()}</p>
                     </div>
-                    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 print:p-4 print:border-gray-200">
+                    <div className="bg-white rounded-2xl shadow-sm border-l-4 border-l-orange-500 p-4 print:p-4 print:border-l-2">
                         <p className="text-[11px] text-gray-500 font-bold uppercase tracking-wider print:text-[10pt]">Partial Debt</p>
                         <p className="text-xl font-black text-orange-500 mt-1 print:text-[14pt]">ETB {Number(summary.partial_debt || 0).toLocaleString()}</p>
                     </div>
