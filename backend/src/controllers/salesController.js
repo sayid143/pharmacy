@@ -179,7 +179,7 @@ const getSales = async (req, res, next) => {
                 {
                     model: db.SaleItem,
                     as: 'items',
-                    include: [{ model: db.Medicine, as: 'medicine', attributes: ['id', 'name', 'unit'] }]
+                    include: [{ model: db.Medicine, as: 'medicine', attributes: ['id', 'name', 'unit', 'selling_price'] }]
                 }
             ],
             order: [['created_at', 'DESC']],
@@ -216,7 +216,7 @@ const getSale = async (req, res, next) => {
 
         const items = await db.SaleItem.findAll({
             where: { sale_id: req.params.id },
-            include: [{ model: db.Medicine, as: 'medicine', attributes: ['id', 'name', 'barcode', 'unit'] }]
+            include: [{ model: db.Medicine, as: 'medicine', attributes: ['id', 'name', 'barcode', 'unit', 'selling_price'] }]
         });
 
         res.json({ success: true, data: { ...sale.toJSON(), items } });

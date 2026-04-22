@@ -540,16 +540,21 @@ export default function Transactions() {
                                     const badge = PAYMENT_BADGE[rawMethod] || { label: rawMethod || '—', cls: 'bg-gray-100 text-gray-600' };
                                     const isPaid = tx.payment_status === 'paid';
                                     const isRefunded = tx.status === 'refunded';
-                                    
-                                    // Calculate accurate total cost for this transaction
-                                    let totalCost = 0;
+
+                                    // Calculate accurate expected total (from current Medicine prices)
+                                    let expectedTotal = 0;
                                     if (tx.items && tx.items.length > 0) {
                                         tx.items.forEach(item => {
-                                            totalCost += (parseFloat(item.purchase_price) || 0) * (parseInt(item.quantity) || 0);
+                                            expectedTotal += (parseFloat(item.medicine?.selling_price) || parseFloat(item.selling_price) || 0) * (parseInt(item.quantity) || 0);
                                         });
+                                    } else if (tx.total_amount) {
+                                        expectedTotal = parseFloat(tx.total_amount);
                                     }
-                                    const profitOrLoss = parseFloat(tx.total_amount || 0) - totalCost;
-                                    const isLoss = profitOrLoss < 0 && totalCost > 0;
+                                    
+                                    const actualSoldTotal = parseFloat(tx.total_amount || 0);
+                                    const profitOrLoss = actualSoldTotal - expectedTotal;
+                                    const isLoss = profitOrLoss < -0.01; // Actual is less than Expected
+                                    const lossAmount = Math.abs(profitOrLoss);
 
                                     return (
                                         <tr key={tx.id} className="bg-white even:bg-slate-50 hover:bg-gray-50/80 transition-colors shadow-[0_-1px_2px_rgba(0,0,0,0.05)] relative z-0 hover:z-10">
@@ -592,18 +597,18 @@ export default function Transactions() {
                                                 </span>
                                             </td>
                                             <td className="px-4 py-2.5 font-bold text-gray-900 text-right whitespace-nowrap">
-                                                <span className="tracking-tight">{formatCurrency(tx.total_amount)}</span>
-                                                {parseFloat(tx.discount_amount) > 0 && (
-                                                    <p className="text-[10px] text-emerald-500 font-medium mt-0.5">-{formatCurrency(tx.discount_amount)} disc.</p>
+                                                <span className="tracking-tight" title="Original Medicine Price">{formatCurrency(expectedTotal)}</span>
+                                                {isLoss && (
+                                                    <p className="text-[10px] text-gray-500 font-medium mt-0.5">Sold at: {formatCurrency(actualSoldTotal)}</p>
                                                 )}
                                             </td>
                                             <td className="px-4 py-2.5 whitespace-nowrap text-right">
                                                 <div className="flex flex-col items-end">
                                                     <span className="font-bold text-emerald-600 tracking-tight">ETB {(parseFloat(tx.amount_paid) || 0).toFixed(2)}</span>
-                                                    {parseFloat(tx.total_amount) > (parseFloat(tx.amount_paid) || 0) && (
+                                                    {actualSoldTotal > (parseFloat(tx.amount_paid) || 0) && (
                                                         <span className="text-amber-600 font-bold text-[10px] tracking-tight mt-0.5 flex items-center justify-end gap-1" title="Unpaid Debt">
                                                             <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span>
-                                                            Debt: ETB {(parseFloat(tx.total_amount) - (parseFloat(tx.amount_paid) || 0)).toFixed(2)}
+                                                            Debt: ETB {(actualSoldTotal - (parseFloat(tx.amount_paid) || 0)).toFixed(2)}
                                                         </span>
                                                     )}
                                                     {isLoss && (
@@ -825,7 +830,7 @@ export default function Transactions() {
                                         )}
                                         {selectedTx.items && selectedTx.items.length > 0 && (
                                             <div className="flex justify-between pt-1">
-                                                <span className="text-gray-500">Total Profit</span>
+                                                <span className="text-gray-500">Total Profit/Loss</span>
                                                 <span className={`font-bold ${selectedTx.items.reduce((acc, i) => acc + (parseFloat(i.selling_price) - parseFloat(i.purchase_price)) * i.quantity, 0) >= 0
                                                     ? 'text-emerald-600' : 'text-rose-600'
                                                     }`}>
