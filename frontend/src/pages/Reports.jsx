@@ -173,7 +173,8 @@ export default function Reports() {
     });
 
     const allTransactions = data?.recent_transactions || [];
-    const transactionsTotal = allTransactions.reduce((sum, t) => sum + Number(t.total_amount || 0), 0);
+    const transactionsTotal = Number(summary.actual_collected || 0);
+    const grossRevenueTotal = allTransactions.reduce((sum, t) => sum + Number(t.total_amount || 0), 0);
 
     const indexOfLast = currentPage * transactionsPerPage;
     const indexOfFirst = indexOfLast - transactionsPerPage;
@@ -310,7 +311,7 @@ export default function Reports() {
                 {/* KPI Cards */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-8 print:grid-cols-5 print:gap-3 print:mb-8">
                     <div className="bg-white rounded-2xl shadow-sm border-l-4 border-l-blue-600 p-4 print:p-4 print:border-l-2">
-                        <p className="text-[11px] text-gray-500 font-bold uppercase tracking-wider print:text-[10pt]">Revenue</p>
+                        <p className="text-[11px] text-gray-500 font-bold uppercase tracking-wider print:text-[10pt]">Revenue (Gross)</p>
                         <p className="text-xl font-black text-gray-900 mt-1 print:text-[14pt]">ETB {Number(summary.total_revenue || 0).toLocaleString()}</p>
                     </div>
                     <div className="bg-white rounded-2xl shadow-sm border-l-4 border-l-emerald-600 p-4 print:p-4 print:border-l-2">
@@ -334,7 +335,7 @@ export default function Reports() {
                 {/* Debt & Reconciliation Cards */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8 print:grid-cols-4 print:gap-3 print:mb-8">
                     <div className="bg-white rounded-2xl shadow-sm border-l-4 border-l-emerald-600 p-4 print:p-4 print:border-l-2">
-                        <p className="text-[11px] text-gray-500 font-bold uppercase tracking-wider print:text-[10pt]">Actual Collected</p>
+                        <p className="text-[11px] text-gray-500 font-bold uppercase tracking-wider print:text-[10pt]">Actual Collected (Received)</p>
                         <p className="text-xl font-black text-green-600 mt-1 print:text-[14pt]">ETB {Number(summary.actual_collected || 0).toLocaleString()}</p>
                     </div>
                     <div className="bg-white rounded-2xl shadow-sm border-l-4 border-l-red-600 p-4 print:p-4 print:border-l-2">
@@ -388,7 +389,7 @@ export default function Reports() {
                                     <thead className="bg-[#e6f4fe] text-sky-700 capitalize tracking-wide text-[12px] font-semibold">
                                         <tr>
                                             <th className="px-4 py-2 border-b">Method</th>
-                                            <th className="px-4 py-2 text-right border-b">Collected Amount</th>
+                                            <th className="px-4 py-2 text-right border-b">Amount</th>
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-gray-100">
@@ -396,7 +397,7 @@ export default function Reports() {
                                             paymentBreakdown.map((p, idx) => (
                                                 <tr key={idx} className="border-b border-gray-100">
                                                     <td className="px-4 py-3 font-medium uppercase text-gray-700">
-                                                        {p.name}
+                                                        {p.name === 'credit' ? <span className="text-orange-600 font-bold">Credit</span> : p.name}
                                                     </td>
                                                     <td className="px-4 py-3 text-right font-bold text-gray-900">
                                                         ETB {Number(p.total).toLocaleString(undefined, { minimumFractionDigits: 2 })}
@@ -438,7 +439,7 @@ export default function Reports() {
                                         <th className="px-4 py-3">Customer</th>
                                         <th className="px-4 py-3">Medicines</th>
                                         <th className="px-4 py-3 text-center">Qty</th>
-                                        <th className="px-4 py-3 text-right">Amount</th>
+                                        <th className="px-4 py-3 text-right">Paid Amount</th>
                                         <th className="px-4 py-3 text-center">Payment</th>
                                     </tr>
                                 </thead>
@@ -450,16 +451,23 @@ export default function Reports() {
                                             <td className="px-6 py-4 text-gray-800">{t.customer_name || 'Walk-in'}</td>
                                             <td className="px-6 py-4">
                                                 <div className="flex flex-col">
-                                                    {(t.items || []).map((item, i) => (
-                                                        <span key={i} className="font-bold text-gray-900 leading-tight">{item.name}</span>
-                                                    ))}
+                                                    {(t.items && t.items.length > 0) ? (
+                                                        t.items.map((item, i) => (
+                                                            <span key={i} className="font-bold text-gray-900 leading-tight">{item.name}</span>
+                                                        ))
+                                                    ) : (
+                                                        <span className="font-bold text-blue-600 italic">{t.medicines}</span>
+                                                    )}
                                                 </div>
                                             </td>
                                             <td className="px-6 py-4 text-center font-bold">
                                                 {t.items?.reduce((s, i) => s + i.quantity, 0)}
                                             </td>
                                             <td className="px-6 py-4 text-right font-bold text-gray-900 whitespace-nowrap">
-                                                ETB {Number(t.total_amount || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                                                ETB {Number(t.amount_paid || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                                                {t.total_amount > t.amount_paid && (
+                                                    <p className="text-[10px] text-orange-600 font-bold">Total: ETB {Number(t.total_amount).toLocaleString()}</p>
+                                                )}
                                             </td>
                                             <td className="px-6 py-4 text-center uppercase text-xs font-bold text-gray-700">
                                                 {t.payment_method || '—'}
@@ -468,13 +476,22 @@ export default function Reports() {
                                     ))}
                                     {/* Table Footer - Screen Total */}
                                     {allTransactions.length > 0 && (
-                                        <tr className="bg-[#e6f4fe] border-t-2">
-                                            <td colSpan="5" className="px-6 py-6 text-right font-black uppercase tracking-widest text-[13px] text-gray-900">Total for Period:</td>
-                                            <td className="px-6 py-6 text-right font-black text-blue-900 text-xl whitespace-nowrap">
-                                                ETB {transactionsTotal.toLocaleString(undefined, { minimumFractionDigits: 2 })}
-                                            </td>
-                                            <td className="px-6 py-6"></td>
-                                        </tr>
+                                        <>
+                                            <tr className="bg-gray-50/50 border-t border-gray-100 italic">
+                                                <td colSpan="5" className="px-6 py-3 text-right font-medium text-[12px] text-gray-500">Gross Revenue (Total Sales):</td>
+                                                <td className="px-6 py-3 text-right font-bold text-gray-500 text-sm whitespace-nowrap">
+                                                    ETB {grossRevenueTotal.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                                                </td>
+                                                <td className="px-6 py-6"></td>
+                                            </tr>
+                                            <tr className="bg-[#e6f4fe] border-t-2 border-blue-100">
+                                                <td colSpan="5" className="px-6 py-6 text-right font-black uppercase tracking-widest text-[13px] text-gray-900">Total for Period:</td>
+                                                <td className="px-6 py-6 text-right font-black text-blue-900 text-xl whitespace-nowrap">
+                                                    ETB {transactionsTotal.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                                                </td>
+                                                <td className="px-6 py-6"></td>
+                                            </tr>
+                                        </>
                                     )}
                                 </tbody>
                             </table>
@@ -503,7 +520,7 @@ export default function Reports() {
                             <th className="px-2 py-3 w-[15%] text-[10pt] font-bold">Customer</th>
                             <th className="px-2 py-3 w-[22%] text-[10pt] font-bold">Medicines</th>
                             <th className="px-2 py-3 w-[6%] text-center text-[10pt] font-bold">Qty</th>
-                            <th className="px-2 py-3 w-[15%] text-right text-[10pt] font-bold">Amount</th>
+                            <th className="px-2 py-3 w-[15%] text-right text-[10pt] font-bold">Paid</th>
                             <th className="px-2 py-3 w-[17%] text-center text-[10pt] font-bold">Payment</th>
                         </tr>
                     </thead>
@@ -515,14 +532,18 @@ export default function Reports() {
                                 <td className="px-3 py-2 text-gray-800">{t.customer_name || 'Walk-in'}</td>
                                 <td className="px-3 py-2">
                                     <div className="flex flex-col">
-                                        {(t.items || []).map((item, i) => (
-                                            <span key={i} className="font-bold text-gray-900 leading-tight">{item.name}</span>
-                                        ))}
+                                        {(t.items && t.items.length > 0) ? (
+                                            t.items.map((item, i) => (
+                                                <span key={i} className="font-bold text-gray-900 leading-tight">{item.name}</span>
+                                            ))
+                                        ) : (
+                                            <span className="font-bold text-blue-600 italic">{t.medicines}</span>
+                                        )}
                                     </div>
                                 </td>
                                 <td className="px-3 py-2 text-center font-bold">{t.items?.reduce((s, i) => s + i.quantity, 0)}</td>
                                 <td className="px-3 py-2 text-right font-bold text-black whitespace-nowrap">
-                                    ETB {Number(t.total_amount || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                                    ETB {Number(t.amount_paid || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
                                 </td>
                                 <td className="px-3 py-2 text-center text-[9.5pt] uppercase font-bold text-gray-800">
                                     {t.payment_method || '—'}
@@ -533,6 +554,13 @@ export default function Reports() {
                         {/* THE CRITICAL SUMMARY FOOTER - Anchored to the end of the data */}
                         {allTransactions.length > 0 && (
                             <>
+                                <tr className="border-t-2 border-gray-200 italic">
+                                    <td colSpan="5" className="px-3 py-3 text-right font-semibold text-[10pt] text-gray-600">Gross Revenue:</td>
+                                    <td className="px-3 py-3 text-right font-bold text-gray-700 text-[11pt] whitespace-nowrap">
+                                        ETB {grossRevenueTotal.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                                    </td>
+                                    <td className="px-3 py-3"></td>
+                                </tr>
                                 <tr className="bg-[#e6f4fe] border-t-4 border-black border-double print-no-break">
                                     <td colSpan="5" className="px-3 py-6 text-right font-black uppercase tracking-widest text-[13pt] text-gray-900">Total for Period:</td>
                                     <td className="px-3 py-6 text-right font-black text-blue-900 text-[18pt] whitespace-nowrap">

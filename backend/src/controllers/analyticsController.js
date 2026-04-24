@@ -433,17 +433,14 @@ const getDetailedReportData = async (whereSales, whereExpenses, replacements, ty
         [...salesCollected, ...paymentsCollected].forEach(item => {
             const method = item.name || 'other';
             const amount = parseFloat(item.total_collected || 0);
+            
+            // For 'credit' method, the collected part (partial payments) 
+            // should stay in totalActualCollected but we will merge the label later
             actualCollectedMap[method] = (actualCollectedMap[method] || 0) + amount;
             totalActualCollected += amount;
         });
 
-        const unifiedCollectedBreakdown = Object.keys(actualCollectedMap).map(key => ({
-            name: key,
-            total: actualCollectedMap[key],
-            count: 0 // Optional filler if count isn't strictly needed for collection graphs
-        }));
-
-        // Fetch Debt Stats generated in this period
+        // 3.5 Fetch Debt Stats generated in this period
         const debtsGenerated = await db.sequelize.query(
             `SELECT 
                 SUM(CASE WHEN paid_amount = 0 THEN balance ELSE 0 END) as full_debt,
@@ -454,6 +451,18 @@ const getDetailedReportData = async (whereSales, whereExpenses, replacements, ty
             { replacements, type: QueryTypes.SELECT }
         );
         const debtStats = (debtsGenerated && debtsGenerated.length > 0) ? debtsGenerated[0] : { full_debt: 0, partial_debt: 0, total_uncollected: 0 };
+
+        // MERGE UNCOLLECTED DEBT INTO CREDIT ROW
+        const totalDebt = parseFloat(debtStats.total_uncollected || 0);
+        if (totalDebt > 0) {
+            actualCollectedMap['credit'] = (actualCollectedMap['credit'] || 0) + totalDebt;
+        }
+
+        const unifiedCollectedBreakdown = Object.keys(actualCollectedMap).map(key => ({
+            name: key,
+            total: actualCollectedMap[key],
+            count: 0 
+        }));
 
         // 4. Detailed Sales Trend (Revenue & Profit per day)
         const salesTrend = await db.sequelize.query(
@@ -483,6 +492,7 @@ const getDetailedReportData = async (whereSales, whereExpenses, replacements, ty
             delete refinedWhere.created_at;
         }
 
+        // 5. Consolidated Transaction List (Sales + Standalone Payments)
         const recentTransactionsRaw = await db.Sale.findAll({
             where: refinedWhere,
             include: [
@@ -496,19 +506,46 @@ const getDetailedReportData = async (whereSales, whereExpenses, replacements, ty
             order: [[db.sequelize.col('Sale.created_at'), 'DESC']]
         });
 
-        const recentTransactions = recentTransactionsRaw.map(s => {
-            const saleData = s.get({ plain: true });
-            return {
-                id: saleData.id,
-                invoice_number: saleData.invoice_number,
-                date: saleData.created_at || saleData.createdAt,
-                customer_name: saleData.customer?.name || 'Walk-in',
-                medicines: (saleData.items || []).map(i => i.medicine?.name).filter(Boolean).join(', '),
-                items: (saleData.items || []).map(i => ({ name: i.medicine?.name, quantity: i.quantity })),
-                total_amount: saleData.total_amount,
-                payment_method: saleData.payment_method
-            };
+        const recentPaymentsRaw = await db.Payment.findAll({
+            where: {
+                created_at: { [Op.between]: [replacements[0], replacements[1] + ' 23:59:59'] }
+            },
+            include: [{ model: db.Customer, as: 'customer' }],
+            order: [['created_at', 'DESC']]
         });
+
+        const recentTransactions = [
+            ...recentTransactionsRaw.map(s => {
+                const saleData = s.get({ plain: true });
+                return {
+                    id: saleData.id,
+                    invoice_number: saleData.invoice_number,
+                    date: saleData.created_at || saleData.createdAt,
+                    customer_name: saleData.customer?.name || 'Walk-in',
+                    medicines: (saleData.items || []).map(i => i.medicine?.name).filter(Boolean).join(', '),
+                    items: (saleData.items || []).map(i => ({ name: i.medicine?.name, quantity: i.quantity })),
+                    total_amount: saleData.total_amount,
+                    amount_paid: saleData.amount_paid,
+                    payment_method: saleData.payment_method,
+                    desc: 'Sale'
+                };
+            }),
+            ...recentPaymentsRaw.map(p => {
+                const pData = p.get({ plain: true });
+                return {
+                    id: `p-${pData.id}`,
+                    invoice_number: `PAY-${pData.id}`,
+                    date: pData.created_at || pData.createdAt,
+                    customer_name: pData.customer?.name || 'Walk-in',
+                    medicines: 'Debt Payment Collection',
+                    items: [],
+                    total_amount: 0,
+                    amount_paid: pData.amount,
+                    payment_method: pData.payment_method,
+                    desc: 'Debt Payment'
+                };
+            })
+        ].sort((a, b) => new Date(b.date) - new Date(a.date));
 
         // 6. Top Medicines
         const topMedicines = await db.sequelize.query(

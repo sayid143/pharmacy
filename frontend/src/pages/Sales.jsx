@@ -4,6 +4,7 @@ import { Search, ShoppingCart, Trash2, Check, Printer, Activity, DollarSign, Pac
 import api from '../services/api';
 import toast from 'react-hot-toast';
 import { useAuth } from '../context/AuthContext';
+import InvoiceReceipt from '../components/InvoiceReceipt';
 
 const PAYMENT_METHODS = [
     { id: 'cash', label: 'Cash' },
@@ -261,43 +262,130 @@ export default function Sales() {
     };
 
     if (receipt) return (
-        <div className="max-w-md mx-auto py-10">
-            <div className="card p-8 text-center shadow-lg border-t-4 border-t-emerald-500">
-                <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <Check className="text-emerald-600" size={32} />
-                </div>
-                <h2 className="text-2xl font-bold text-gray-900 mb-2">Sale Complete!</h2>
-                <p className="text-gray-500 mb-6">Invoice #<span className="font-mono font-medium text-gray-800">{receipt.invoice_number}</span></p>
-                <div className="bg-gray-50 rounded-xl p-5 text-left mb-6 font-mono text-sm space-y-3">
-                    {receipt.cart.map((i, idx) => (
-                        <div key={idx} className="flex justify-between items-start">
-                            <div className="flex-1">
-                                <span className="text-gray-800 block">{i.name}</span>
-                                <span className="text-gray-500 text-xs">{i.qty} x ETB {parseFloat(i.selling_price).toFixed(2)}</span>
+        <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+            {/* Unified Invoice Display - Matching Transactions style */}
+            <div className="bg-white rounded-2xl shadow-2xl p-4 sm:p-12 w-full max-w-2xl mx-auto border border-gray-100 print:hidden overflow-x-hidden overflow-y-auto max-h-[90vh] no-scrollbar">
+                <style>{`
+                    .no-scrollbar::-webkit-scrollbar { display: none; }
+                    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+                `}</style>
+                <div className="w-full">
+                    {/* Invoice Header */}
+                    <div className="text-center mb-6 pt-2">
+                        <div className="flex justify-center mb-3">
+                            <div className="w-14 h-14 bg-white flex flex-col items-center justify-center">
+                                <svg width="45" height="45" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-slate-800"><path d="M3 21h18"></path><path d="M5 21V7l8-4v18"></path><path d="M19 21V11l-6-3v13"></path><path d="M9 14h2"></path></svg>
                             </div>
-                            <span className="font-semibold">ETB {(i.selling_price * i.qty).toFixed(2)}</span>
                         </div>
-                    ))}
-                    <div className="border-t border-dashed border-gray-300 pt-3 mt-3 space-y-2">
-                        <div className="flex justify-between text-gray-600"><span>Subtotal</span><span>ETB {receipt.subtotal.toFixed(2)}</span></div>
-                        {receipt.taxAmt > 0 && <div className="flex justify-between text-gray-600"><span>VAT (15%)</span><span>ETB {receipt.taxAmt.toFixed(2)}</span></div>}
-                        {receipt.discountAmt > 0 && <div className="flex justify-between text-emerald-600"><span>Discount</span><span>-ETB {receipt.discountAmt.toFixed(2)}</span></div>}
-                        <div className="flex justify-between font-bold text-gray-900 text-lg pt-2 border-t border-gray-200">
-                            <span>Total</span><span>ETB {receipt.total.toFixed(2)}</span>
+                        <h2 className="text-[28px] font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-emerald-500 uppercase tracking-wider mb-1 mt-2">INVOICE</h2>
+                        <p className="text-gray-500 text-[13px] font-medium tracking-wide">POS Billing System</p>
+
+                        {/* Integrated Status Section */}
+                        <div className="mt-4 pt-4 border-t-2 border-dashed border-gray-100">
+                            <div className="flex items-center justify-center gap-2 mb-1">
+                                <div className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]"></div>
+                                <h1 className="text-xl font-black text-emerald-600 uppercase tracking-widest leading-none">Sale Complete!</h1>
+                            </div>
+                            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em] mb-2">Ready for next customer</p>
                         </div>
-                        <div className="flex justify-between text-gray-600 pt-2">
-                            <span>Paid ({PAYMENT_METHODS.find(m => m.id === receipt.payment_method)?.label || receipt.payment_method})</span>
-                            <span>ETB {receipt.paidAmt.toFixed(2)}</span>
+                    </div>
+
+
+                    <div className="border-b-2 border-blue-600 mb-6 sm:mb-8"></div>
+
+                    {/* Meta */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-8 mb-10">
+                        <div className="bg-gray-50/70 p-4 sm:p-5 rounded-lg border border-gray-100/50">
+                            <div className="grid grid-cols-[80px_1fr] sm:grid-cols-[100px_1fr] gap-y-3 text-[12px] sm:text-[13px]">
+                                <span className="text-blue-600 font-bold">Invoice Number:</span>
+                                <span className="text-gray-800 font-medium">{receipt.invoice_number || 'N/A'}</span>
+                                <span className="text-blue-600 font-bold">Date:</span>
+                                <span className="text-gray-800 font-medium">{new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</span>
+                                <span className="text-blue-600 font-bold">Time:</span>
+                                <span className="text-gray-800 font-medium">{new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}</span>
+                            </div>
                         </div>
-                        {receipt.change_amount > 0 && <div className="flex justify-between text-emerald-600 font-medium"><span>Change</span><span>ETB {receipt.change_amount.toFixed(2)}</span></div>}
-                        {receipt.rem > 0 && <div className="flex justify-between text-rose-600 font-medium"><span>Remaining Balance (Debt)</span><span>ETB {receipt.rem.toFixed(2)}</span></div>}
+                        <div className="bg-gray-50/70 p-4 sm:p-5 rounded-lg border border-gray-100/50">
+                            <h4 className="text-blue-600 font-bold text-[12px] sm:text-[13px] mb-3">Pharmacy POS SYSTEM</h4>
+                            <div className="text-[12px] sm:text-[13px] text-gray-800 flex flex-col gap-1.5">
+                                <span>Jigjiga</span>
+                                <span>Ethiopia</span>
+                                <span>Phone: +251915056970</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Items */}
+                    <div className="mb-8 w-full overflow-hidden">
+                        <table className="w-full text-[12px] sm:text-[13px] border border-blue-600 overflow-hidden rounded-t table-fixed">
+                            <thead className="bg-gradient-to-r from-blue-600 to-emerald-500 text-white">
+                                <tr>
+                                    <th className="text-left px-3 sm:px-5 py-3 font-bold w-[45%]">Item</th>
+                                    <th className="text-left px-2 sm:px-5 py-3 font-bold w-[20%]">Price</th>
+                                    <th className="text-center px-1 sm:px-5 py-3 font-bold w-[15%] text-[10px] sm:text-[13px]">Qty</th>
+                                    <th className="text-right px-3 sm:px-5 py-3 font-bold w-[20%]">Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {receipt.cart.map((item, idx) => (
+                                    <tr key={idx} className="border-b border-gray-200 last:border-0 hover:bg-slate-50 transition-colors">
+                                        <td className="px-3 sm:px-5 py-3.5 text-gray-800 font-medium truncate" title={item.name}>{item.name}</td>
+                                        <td className="px-2 sm:px-5 py-3.5 text-gray-800 whitespace-nowrap">{parseFloat(item.selling_price).toFixed(0)}</td>
+                                        <td className="px-1 sm:px-5 py-3.5 text-center text-gray-800 font-bold">{item.qty}</td>
+                                        <td className="px-3 sm:px-5 py-3.5 text-right text-gray-800 font-black whitespace-nowrap">{(item.selling_price * item.qty).toFixed(0)}</td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                            <tfoot className="border-t border-gray-200 bg-gray-50/50"><tr><td colSpan="4" className="px-5 py-1"></td></tr></tfoot>
+                        </table>
+                    </div>
+
+                    {/* Totals */}
+                    <div className="flex justify-end mb-10">
+                        <div className="w-full sm:w-[300px] space-y-3.5">
+                            <div className="flex justify-between items-center text-gray-700 text-[13px]">
+                                <span className="font-semibold">Subtotal:</span>
+                                <span>ETB {receipt.subtotal.toFixed(2)}</span>
+                            </div>
+                            {receipt.discountAmt > 0 && (
+                                <div className="flex justify-between items-center text-gray-700 text-[13px]">
+                                    <span className="font-semibold">Discount:</span>
+                                    <span>-ETB {receipt.discountAmt.toFixed(2)}</span>
+                                </div>
+                            )}
+                            {receipt.taxAmt > 0 && (
+                                <div className="flex justify-between items-center text-gray-700 text-[13px]">
+                                    <span className="font-semibold">VAT:</span>
+                                    <span>ETB {receipt.taxAmt.toFixed(2)}</span>
+                                </div>
+                            )}
+                            <div className="flex justify-between items-center pt-4 border-t border-gray-200 mt-2">
+                                <span className="font-bold text-blue-600 text-[15px]">Total Amount:</span>
+                                <span className="font-black text-blue-700 text-lg">ETB {receipt.total.toFixed(2)}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Payment Method */}
+                    <div className="bg-blue-50/60 border-l-[3px] border-blue-600 px-4 py-2.5 w-fit rounded-r flex items-center gap-2 shadow-sm">
+                        <span className="font-bold text-gray-800 text-[13px]">Payment Method:</span>
+                        <span className="text-blue-700 capitalize font-medium text-[13px]">{(receipt.payment_method || receipt.paymentMethod || 'cash').replace('_', ' ')}</span>
+                    </div>
+
+                    {/* Actions */}
+                    <div className="flex flex-col sm:flex-row justify-center gap-3 sm:gap-4 mt-12 print:hidden pt-4 border-t border-gray-100">
+                        <button onClick={() => window.print()} className="px-8 py-2.5 bg-gradient-to-r from-blue-600 to-emerald-500 hover:from-blue-700 hover:to-emerald-600 text-white rounded font-bold shadow-sm transition-all cursor-pointer flex items-center gap-2">
+                            <Printer size={18} /> Print Receipt
+                        </button>
+                        <button onClick={() => setReceipt(null)} className="px-8 py-2.5 bg-gradient-to-r from-blue-600 to-emerald-500  hover:from-emerald-600 hover:to-teal-600 text-white rounded font-bold shadow-sm transition-all cursor-pointer flex items-center gap-2">
+                            <Check size={18} /> New Sale
+                        </button>
                     </div>
                 </div>
-                <div className="flex gap-4">
-                    <button onClick={() => window.print()} className="btn-secondary flex-1 py-3"><Printer size={18} /> Print Receipt</button>
-                    <button onClick={() => setReceipt(null)} className="btn-success flex-1 py-3 text-white font-bold">Next Sale</button>
-                </div>
             </div>
+
+            {/* Hidden Thermal Print Output */}
+            <InvoiceReceipt data={receipt} />
         </div>
     );
 
