@@ -455,17 +455,15 @@ const getDetailedReportData = async (whereSales, whereExpenses, replacements, ty
         );
         const debtStats = (debtsGenerated && debtsGenerated.length > 0) ? debtsGenerated[0] : { full_debt: 0, partial_debt: 0, total_uncollected: 0 };
 
-        // MERGE UNCOLLECTED DEBT INTO CREDIT ROW
-        const totalDebt = parseFloat(debtStats.total_uncollected || 0);
-        if (totalDebt > 0) {
-            actualCollectedMap['credit'] = (actualCollectedMap['credit'] || 0) + totalDebt;
-        }
+        // MERGE UNCOLLECTED DEBT INTO CREDIT ROW removed as requested
 
-        const unifiedCollectedBreakdown = Object.keys(actualCollectedMap).map(key => ({
-            name: key,
-            total: actualCollectedMap[key],
-            count: 0 
-        }));
+        const unifiedCollectedBreakdown = Object.keys(actualCollectedMap)
+            .filter(key => key !== 'credit') // Filter out credit method
+            .map(key => ({
+                name: key,
+                total: Math.round(actualCollectedMap[key]),
+                count: 0 
+            }));
 
         // 4. Detailed Sales Trend (Revenue & Profit per day)
         const salesTrend = await db.sequelize.query(
@@ -531,7 +529,8 @@ const getDetailedReportData = async (whereSales, whereExpenses, replacements, ty
                         name: i.medicine?.name,
                         quantity: i.quantity,
                         selling_price: i.selling_price,
-                        purchase_price: i.purchase_price
+                        // Synchronize with current medicine registration data
+                        purchase_price: i.medicine?.purchase_price || i.purchase_price
                     })),
                     total_amount: saleData.total_amount,
                     amount_paid: saleData.amount_paid,

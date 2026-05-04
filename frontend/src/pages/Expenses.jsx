@@ -252,10 +252,10 @@ export default function Expenses() {
                             onChange={(e) => setDateFilter(e.target.value)}
                             className="form-input py-2 px-4 bg-white border border-gray-200 rounded-lg text-sm font-medium text-gray-700 min-w-[140px] appearance-none"
                         >
-                            <option value="all">All Expenses</option>
                             <option value="today">Today</option>
                             <option value="week">This Week</option>
                             <option value="month">This Month</option>
+                            <option value="all">All Expenses</option>
                         </select>
                     </div>
                 </div>
