@@ -173,7 +173,7 @@ export default function Medicines() {
                                 </tr>
                             ) : medicines.length > 0 ? (
                                 medicines.map(med => (
-                                    <tr key={med.id} className="bg-white even:bg-slate-50 hover:bg-gray-50/80 transition-colors shadow-[0_-1px_2px_rgba(0,0,0,0.05)] relative z-0 hover:z-10">
+                                    <tr key={med.id} className="odd:bg-gray-50 even:bg-white hover:bg-gray-100/50 transition-colors [&>td]:border-b [&>td]:border-gray-200">
                                         <td className="px-4 py-2.5 whitespace-nowrap">
                                             <div className="flex items-center gap-3">
                                                 <div className="w-10 h-10 bg-blue-50/50 rounded-xl flex items-center justify-center border border-blue-100/50 flex-shrink-0 shadow-sm">

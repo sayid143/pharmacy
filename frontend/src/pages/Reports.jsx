@@ -15,6 +15,8 @@ import {
 import api from '../services/api';
 import toast from 'react-hot-toast';
 import InvoiceReceipt from '../components/InvoiceReceipt';
+import jsPDF from 'jspdf';
+import domtoimage from 'dom-to-image-more';
 
 const formatCurrency = (v) => `ETB ${Math.round(parseFloat(v || 0)).toLocaleString()}`;
 const formatDate = (d) => {
@@ -266,33 +268,213 @@ export default function Reports() {
     const salesTrend = data?.sales_trend || [];
     const paymentBreakdown = data?.payment_breakdown || [];
 
+    const getReportDateString = () => {
+        const now = new Date();
+        if (filter === 'today') {
+            return `${now.getDate()}/${now.getMonth() + 1}/${now.getFullYear()}`;
+        } else if (filter === 'week') {
+            const start = new Date(now);
+            start.setDate(now.getDate() - now.getDay());
+            const end = new Date(start);
+            end.setDate(start.getDate() + 6);
+            return `${start.getDate()}-${end.getDate()}/${end.getMonth() + 1}/${end.getFullYear()}`;
+        } else if (filter === 'month') {
+            const [y, m, d] = (selectedMonthDate || format(now, 'yyyy-MM-dd')).split('-').map(Number);
+            if (isReportsFullMonth) {
+                const endDay = new Date(y, m, 0).getDate();
+                return `1-${endDay}/${m}/${y}`;
+            } else {
+                return `${d}/${m}/${y}`;
+            }
+        } else if (filter === 'custom' && dateRange.start && dateRange.end) {
+            const [sy, sm, sd] = dateRange.start.split('-').map(Number);
+            const [ey, em, ed] = dateRange.end.split('-').map(Number);
+            if (sm === em && sy === ey) {
+                return `${sd}-${ed}/${em}/${ey}`;
+            }
+            return `${sd}/${sm}/${sy} - ${ed}/${em}/${ey}`;
+        }
+        return `${now.getDate()}/${now.getMonth() + 1}/${now.getFullYear()}`;
+    };
+
     const handlePrint = () => {
         window.print();
     };
 
-    const handleExport = () => {
+    const handleExport = async () => {
+        toast('PDF Download is temporarily disabled.', { icon: 'ℹ️' });
+        /*
         if (!data?.recent_transactions || data.recent_transactions.length === 0) {
             toast.error('No transaction data to export');
             return;
         }
 
-        const headers = ['Date', 'Invoice', 'User', 'Medicines', 'Qty', 'Amount', 'Payment Method'];
-        const rows = data.recent_transactions.map(t => {
-            const dateStr = t.date ? format(new Date(t.date), 'yyyy-MM-dd') : 'N/A';
-            const medicineNames = (t.items || []).map(i => i.name).join(' | ') || t.medicines || '';
-            const qty = t.items?.reduce((s, i) => s + i.quantity, 0) || t.quantity || 0;
-            return [dateStr, t.invoice_number, t.user_name || '—', `"${medicineNames}"`, qty, t.total_amount, t.payment_method].join(',');
-        });
+        const toastId = toast.loading('Generating PDF format...');
 
-        const csvContent = "data:text/csv;charset=utf-8," + [headers.join(','), ...rows].join('\n');
-        const encodedUri = encodeURI(csvContent);
-        const link = document.createElement("a");
-        link.setAttribute("href", encodedUri);
-        link.setAttribute("download", `transactions_export_${format(new Date(), 'yyyy-MM-dd')}.csv`);
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        toast.success('Data exported successfully');
+        try {
+            const originalElement = document.getElementById('report-main-container');
+            if (!originalElement) throw new Error("Report container not found.");
+
+            const clone = originalElement.cloneNode(true);
+
+            clone.id = 'pdf-clone-container';
+            clone.style.position = 'absolute';
+            clone.style.left = '-9999px';
+            clone.style.top = '0';
+            clone.style.width = '1100px';
+            clone.style.backgroundColor = '#ffffff';
+
+            const mainUI = clone.querySelector('#main-table-ui');
+            if (mainUI) mainUI.style.display = 'none';
+
+            const filterBtns = clone.querySelector('#filter-buttons');
+            if (filterBtns) filterBtns.style.display = 'none';
+
+            const printTable = clone.querySelector('.print-only-container');
+            if (printTable) {
+                printTable.classList.remove('hidden');
+                printTable.style.display = 'block';
+            }
+
+            const printDates = clone.querySelectorAll('.print\\:block');
+            printDates.forEach(el => {
+                if (el && el.classList) {
+                    el.classList.remove('hidden');
+                    el.style.display = 'block';
+                }
+            });
+
+            const subtitles = clone.querySelectorAll('.print\\:hidden');
+            subtitles.forEach(el => {
+                if (el) el.style.display = 'none';
+            });
+
+            const kpiCards = clone.querySelector('#kpi-cards');
+            if (kpiCards) {
+                kpiCards.className = "grid grid-cols-4 gap-4 mb-8";
+            }
+
+            const netIncome = clone.querySelector('#net-income-card');
+            if (netIncome) {
+                netIncome.className = "grid grid-cols-1 gap-4 mb-8";
+            }
+
+            const charts = clone.querySelector('#charts-container');
+            if (charts) {
+                charts.className = "grid grid-cols-2 gap-8 mb-12";
+
+                // CRITICAL FIX: Recharts uses React ResizeObserver which breaks in isolated clones.
+                // We copy the already-painted SVG innerHTML from the real DOM so it is perfectly sized.
+                const liveCharts = originalElement.querySelector('#charts-container');
+                if (liveCharts) {
+                    charts.innerHTML = liveCharts.innerHTML;
+                }
+            }
+
+            // CRITICAL FIX: dom-to-image fails to parse Tailwind v4 oklch() colors, 
+            // falling back to ugly black borders. We explicitly inline hex values here.
+            clone.querySelectorAll('*').forEach(el => {
+                // Prevent scrollbars in the screenshot
+                if (el.classList.contains('overflow-x-auto') || el.classList.contains('overflow-y-auto')) {
+                    el.style.overflow = 'visible';
+                    el.style.overflowX = 'visible';
+                    el.style.overflowY = 'visible';
+                }
+
+                // Inline standard borders
+                if (el.classList.contains('border-gray-100')) el.style.borderColor = '#f3f4f6';
+                if (el.classList.contains('border-gray-200')) el.style.borderColor = '#e5e7eb';
+                if (el.classList.contains('border-gray-300')) el.style.borderColor = '#d1d5db';
+                if (el.classList.contains('border-blue-600')) el.style.borderColor = '#2563eb';
+
+                // Inline accent left borders (KPI Cards)
+                if (el.classList.contains('border-l-emerald-600')) el.style.borderLeftColor = '#059669';
+                if (el.classList.contains('border-l-blue-600')) el.style.borderLeftColor = '#2563eb';
+                if (el.classList.contains('border-l-amber-600')) el.style.borderLeftColor = '#d97706';
+                if (el.classList.contains('border-l-red-600')) el.style.borderLeftColor = '#dc2626';
+
+                // Inline text colors
+                if (el.classList.contains('text-green-600')) el.style.color = '#16a34a';
+                if (el.classList.contains('text-blue-600')) el.style.color = '#2563eb';
+                if (el.classList.contains('text-gray-500')) el.style.color = '#6b7280';
+                if (el.classList.contains('text-gray-900')) el.style.color = '#111827';
+                if (el.classList.contains('text-sky-700')) el.style.color = '#0369a1';
+
+                // Inline backgrounds
+                if (el.classList.contains('bg-white')) el.style.backgroundColor = '#ffffff';
+                if (el.classList.contains('bg-[#e6f4fe]')) el.style.backgroundColor = '#e6f4fe';
+                if (el.classList.contains('bg-gray-50')) el.style.backgroundColor = '#f9fafb';
+
+                // Fix table cell styling which might lose context
+                if (el.tagName === 'TH') {
+                    el.style.backgroundColor = '#e6f4fe';
+                    el.style.color = '#0369a1';
+                    el.style.borderColor = '#e5e7eb';
+                    el.style.borderWidth = '1px';
+                    el.style.borderStyle = 'solid';
+                }
+                if (el.tagName === 'TD') {
+                    el.style.borderColor = '#e5e7eb';
+                    el.style.borderWidth = '1px';
+                    el.style.borderStyle = 'solid';
+                }
+            });
+
+            document.body.appendChild(clone);
+
+            // Wait for styles to settle
+            await new Promise(resolve => setTimeout(resolve, 300));
+
+            const scrollHeight = clone.scrollHeight;
+            clone.style.height = `${scrollHeight}px`;
+
+            const dataUrl = await domtoimage.toPng(clone, {
+                quality: 1.0,
+                width: 1100,
+                height: scrollHeight,
+                bgcolor: '#ffffff',
+                style: {
+                    transform: 'scale(1)',
+                    transformOrigin: 'top left',
+                    margin: '0',
+                    padding: '20px'
+                }
+            });
+
+            document.body.removeChild(clone);
+
+            // Generate multi-page PDF
+            const doc = new jsPDF('p', 'mm', 'a4');
+            const pdfWidth = doc.internal.pageSize.getWidth();
+            const pdfHeight = (scrollHeight * pdfWidth) / 1100;
+
+            let position = 0;
+            let pageHeight = doc.internal.pageSize.getHeight();
+            let imgHeight = pdfHeight;
+
+            doc.addImage(dataUrl, 'PNG', 0, position, pdfWidth, pdfHeight);
+            imgHeight -= pageHeight;
+
+            while (imgHeight > 0) {
+                position -= pageHeight;
+                doc.addPage();
+                doc.addImage(dataUrl, 'PNG', 0, position, pdfWidth, pdfHeight);
+                imgHeight -= pageHeight;
+            }
+
+            const safeDate = format(new Date(), 'yyyy-MM-dd');
+            doc.save(`report-${safeDate}.pdf`);
+
+            toast.success('Report downloaded successfully as PDF', { id: toastId });
+
+        } catch (error) {
+            console.error('PDF Generation Error:', error);
+            toast.error('Failed to generate PDF', { id: toastId });
+
+            const clone = document.getElementById('pdf-clone-container');
+            if (clone) document.body.removeChild(clone);
+        }
+        */
     };
 
     const trendData = (salesTrend || []).map(item => {
@@ -331,9 +513,11 @@ export default function Reports() {
         );
     }
 
+
+
     return (
         <>
-            <div className={`min-h-screen bg-gray-50 pb-12 print:bg-white print:pb-0 print:hidden`}>
+            <div id="report-main-container" className={`min-h-screen bg-gray-50 pb-12 print:bg-white print:pb-0`}>
                 <style type="text/css" media="print">
                     {`
                         @media print {
@@ -383,11 +567,10 @@ export default function Reports() {
                             <div>
                                 <h1 className="text-2xl font-bold text-gray-900">Reports & Analytics</h1>
                                 <p className="text-gray-600 mt-2 print:hidden">Real-time business performance and financial insights</p>
-                                <p className="hidden print:block text-gray-600 mt-1">Report Generated on: {format(new Date(), 'MMM dd, yyyy')}</p>
-                                <p className="hidden print:block text-gray-600 font-medium tracking-tight">Period: {filter === 'today' ? 'Today' : filter === 'week' ? 'This Week' : filter === 'month' ? (isReportsFullMonth ? 'This Month' : selectedMonthDate) : `${dateRange.start} to ${dateRange.end}`}</p>
+                                <p className="hidden print:block text-gray-900 font-bold text-lg mt-1">{getReportDateString()}</p>
                             </div>
 
-                            <div className="flex flex-wrap items-center gap-3 print:hidden">
+                            <div id="filter-buttons" className="flex flex-wrap items-center gap-3 print:hidden">
                                 {['today', 'week', 'month', 'custom'].map((type) => (
                                     <button
                                         key={type}
@@ -438,18 +621,18 @@ export default function Reports() {
                                     </div>
                                 )}
 
-                                <button onClick={handleExport} className="p-2.5 bg-white border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors" title="Export CSV">
+                                {/* <button onClick={handleExport} className="p-2.5 bg-white border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors" title="Export PDF">
                                     <Download size={18} />
-                                </button>
+                                </button> */}
                                 <button onClick={handlePrint} className="flex items-center gap-2 px-5 py-2.5 bg-blue-600 border border-transparent rounded-lg text-white hover:bg-blue-700 shadow-sm transition-all font-bold text-sm" title="Print Report">
                                     <Printer size={18} />
-                                    <span>Print Report</span>
+                                    <span>Print</span>
                                 </button>
                             </div>
                         </div>
 
                         {/* KPI Cards */}
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8 print:grid-cols-4 print:gap-3 print:mb-8">
+                        <div id="kpi-cards" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8 print:grid-cols-4 print:gap-3 print:mb-8">
                             <div className="bg-white rounded-2xl shadow-sm border-l-4 border-l-blue-600 p-4 print:p-4 print:border-l-2">
                                 <p className="text-[11px] text-gray-500 font-bold uppercase tracking-wider print:text-[10pt]">Total Income</p>
                                 <p className="text-xl font-black text-gray-900 mt-1 print:text-[14pt]">{formatCurrency(summary.total_revenue)}</p>
@@ -468,14 +651,14 @@ export default function Reports() {
                             </div>
                         </div>
 
-                        <div className="grid grid-cols-1 gap-4 mb-8 print:mb-8">
+                        <div id="net-income-card" className="grid grid-cols-1 gap-4 mb-8 print:mb-8">
                             <div className="bg-white rounded-2xl shadow-sm border-l-4 border-l-emerald-600 p-4 print:p-4 print:border-l-2">
                                 <p className="text-[11px] text-gray-500 font-bold uppercase tracking-wider print:text-[10pt]">Net Income</p>
                                 <p className="text-xl font-black text-green-600 mt-1 print:text-[14pt]">{formatCurrency(summary.actual_collected)}</p>
                             </div>
                         </div>
 
-                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-10 print:block print:mb-12">
+                        <div id="charts-container" className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-10 print:block print:mb-12">
                             <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 print:border-gray-200">
                                 <h3 className="text-lg font-semibold mb-6">Sales Trend</h3>
                                 <div className="h-64 sm:h-80">
@@ -549,7 +732,7 @@ export default function Reports() {
                         </div>
 
                         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 relative print:border-none print:shadow-none">
-                            <div className="print:hidden">
+                            <div id="main-table-ui" className="print:hidden">
                                 <div className="p-6 border-b border-gray-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 relative">
                                     <h3 className="text-lg font-semibold text-gray-900">Transactions Summary</h3>
                                     <div className="flex items-center gap-2 sm:gap-4">
@@ -649,7 +832,7 @@ export default function Reports() {
                                                     }
 
                                                     return (
-                                                        <tr key={t.id || t.invoice_number} className="hover:bg-blue-50/30 transition-colors border-b border-gray-50">
+                                                        <tr key={t.id || t.invoice_number} className="odd:bg-gray-50 even:bg-white hover:bg-gray-100/50 transition-colors [&>td]:border-b [&>td]:border-gray-200">
                                                             {visibleColumns.invoice_number && (
                                                                 <td className="px-4 py-2.5 whitespace-nowrap">
                                                                     <span className="font-mono text-xs font-bold text-blue-700 bg-blue-50 px-2.5 py-1 rounded-md border border-blue-100/50">
@@ -732,10 +915,10 @@ export default function Reports() {
                                                             className="px-4 py-6 text-right whitespace-nowrap relative"
                                                         >
                                                             {/* Gradient Top Border */}
-                                                            <div className="absolute top-0 left-0 w-full h-[3px] bg-gradient-to-r from-blue-600 to-emerald-500 rounded-t-md"></div>
+                                                            <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-blue-600 to-emerald-500 rounded-t-md"></div>
 
                                                             <span className="font-black uppercase tracking-[0.2em] text-[13px] text-gray-500 mr-8">
-                                                                TOTAL :
+                                                                TOTAL:
                                                             </span>
 
                                                             <span className="font-black text-blue-900 text-2xl tabular-nums">
@@ -1054,7 +1237,7 @@ export default function Reports() {
                                                                 return (
                                                                     <tr key={idx} className="hover:bg-blue-50/30 transition-colors">
                                                                         <td className="px-5 py-4">
-                                                                            <p className="font-bold text-gray-900">{item.medicine?.name || `Medicine #${item.medicine_id}`}</p>
+                                                                            <p className="font-bold text-gray-900">{item.name || item.medicine?.name || `Product #${item.medicine_id}`}</p>
                                                                             {item.medicine?.unit && (
                                                                                 <p className="text-[10px] font-bold text-blue-400 mt-0.5">{item.medicine.unit}</p>
                                                                             )}
@@ -1208,7 +1391,7 @@ export default function Reports() {
                                                         {selectedTx.items && selectedTx.items.length > 0 ? (
                                                             selectedTx.items.map((item, idx) => (
                                                                 <tr key={idx} className="border-b border-gray-200 last:border-0 hover:bg-slate-50 transition-colors">
-                                                                    <td className="px-3 sm:px-5 py-3.5 text-gray-800 font-medium truncate" title={item.medicine?.name || `Product #${item.medicine_id}`}>{item.medicine?.name || `Product #${item.medicine_id}`}</td>
+                                                                    <td className="px-3 sm:px-5 py-3.5 text-gray-800 font-medium truncate" title={item.name || item.medicine?.name || `Product #${item.medicine_id}`}>{item.name || item.medicine?.name || `Product #${item.medicine_id}`}</td>
                                                                     <td className="px-2 sm:px-5 py-3.5 text-gray-800 font-bold whitespace-nowrap">{parseFloat(item.selling_price).toFixed(0)}</td>
                                                                     <td className="px-1 sm:px-5 py-3.5 text-center text-gray-800 font-bold">{item.quantity}</td>
                                                                     <td className="px-3 sm:px-5 py-3.5 text-right text-gray-800 font-black whitespace-nowrap">{parseFloat(item.subtotal).toFixed(0)}</td>

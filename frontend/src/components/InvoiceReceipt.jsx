@@ -14,7 +14,7 @@ const InvoiceReceipt = forwardRef(({ data }, ref) => {
         quantity: parseInt(i.qty || i.quantity),
         subtotal: Math.round(parseFloat(i.selling_price) * parseInt(i.qty || i.quantity))
     })) : (data.items || []).map(i => ({
-        name: i.medicine?.name || `Item #${i.medicine_id}`,
+        name: i.name || i.medicine?.name || `Item #${i.medicine_id}`,
         selling_price: Math.round(parseFloat(i.selling_price)),
         quantity: parseInt(i.quantity),
         subtotal: Math.round(parseFloat(i.subtotal) || (parseFloat(i.selling_price) * parseInt(i.quantity)))
