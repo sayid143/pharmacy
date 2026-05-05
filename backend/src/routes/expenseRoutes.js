@@ -10,7 +10,7 @@ router.use(authenticate);
 router.get('/summary', getExpenseSummary);
 router.get('/', getExpenses);
 router.post('/', requireRole(['admin', 'pharmacist']), upload.single('receipt'), createExpense);
-router.put('/:id', requireRole(['admin', 'pharmacist']), updateExpense);
+router.put('/:id', requireRole(['admin', 'pharmacist']), upload.single('receipt'), updateExpense);
 router.delete('/:id', requireRole(['admin']), deleteExpense);
 
 export default router;

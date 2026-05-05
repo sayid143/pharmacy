@@ -13,7 +13,7 @@ export default function Expenses() {
     const [reports, setReports] = useState({});
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState('');
-    const [dateFilter, setDateFilter] = useState('all');
+    const [dateFilter, setDateFilter] = useState('today');
     const [showModal, setShowModal] = useState(false);
     const [submitting, setSubmitting] = useState(false);
     const [editId, setEditId] = useState(null);
@@ -59,11 +59,15 @@ export default function Expenses() {
 
     const filterByDate = (dateString, filterType) => {
         if (!dateString || filterType === 'all') return true;
-        const d = new Date(dateString);
+        const expDateStr = dateString.split('T')[0];
         const now = new Date();
+        const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+        
         if (filterType === 'today') {
-            return d.toDateString() === now.toDateString();
+            return expDateStr === todayStr;
         }
+        
+        const d = new Date(dateString);
         if (filterType === 'week') {
             const diff = now - d;
             return diff <= 7 * 24 * 60 * 60 * 1000;
@@ -80,6 +84,18 @@ export default function Expenses() {
             ex.category?.toLowerCase().includes(search.toLowerCase())) &&
         filterByDate(ex.expense_date, dateFilter)
     );
+
+    // Strictly isolated daily calculations for Row 2 cards
+    const now = new Date();
+    const strictTodayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+    const strictTodayExpenses = expenses.filter(ex => {
+        if (!ex.expense_date) return false;
+        return ex.expense_date.split('T')[0] === strictTodayStr;
+    });
+
+    const dynamicExpenseTotal = strictTodayExpenses.reduce((sum, item) => sum + Number(item.amount || 0), 0);
+    const dynamicExpenseCount = strictTodayExpenses.length;
+    const dynamicCategoriesCount = new Set(strictTodayExpenses.map(e => e.category)).size;
 
     const openModal = (expense = null) => {
         if (expense) {
@@ -158,11 +174,11 @@ export default function Expenses() {
             </div>
 
             {/* Stats Cards Row 1 */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="card p-4 flex justify-between items-center border-l-4 border-l-emerald-500 shadow-sm rounded-xl bg-white hover:shadow-md transition-shadow">
                     <div>
                         <p className="text-[11px] text-gray-500 font-bold uppercase tracking-wider">Today's Income</p>
-                        <h3 className="text-xl font-black text-gray-900 mt-1">${Number(reports?.summary?.total_revenue || 0).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</h3>
+                        <h3 className="text-xl font-black text-gray-900 mt-1">${Number(reports?.summary?.actual_collected || reports?.summary?.total_revenue || 0).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</h3>
                     </div>
                     <div className="w-10 h-10 bg-emerald-50 rounded-lg flex items-center justify-center text-emerald-500">
                         <DollarSign size={20} />
@@ -179,20 +195,10 @@ export default function Expenses() {
                     </div>
                 </div>
 
-                <div className="card p-4 flex justify-between items-center border-l-4 border-l-blue-500 shadow-sm rounded-xl bg-white hover:shadow-md transition-shadow">
-                    <div>
-                        <p className="text-[11px] text-gray-500 font-bold uppercase tracking-wider">Net Profit Today</p>
-                        <h3 className="text-xl font-black text-gray-900 mt-1">${Number(reports?.summary?.net_profit || 0).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</h3>
-                    </div>
-                    <div className="w-10 h-10 bg-blue-50 rounded-lg flex items-center justify-center text-blue-500">
-                        <TrendingUp size={20} />
-                    </div>
-                </div>
-
                 <div className="card p-4 flex justify-between items-center border-l-4 border-l-purple-500 shadow-sm rounded-xl bg-white hover:shadow-md transition-shadow">
                     <div>
                         <p className="text-[11px] text-gray-500 font-bold uppercase tracking-wider">Today's Sales</p>
-                        <h3 className="text-xl font-black text-gray-900 mt-1">{reports?.summary?.total_transactions || 0}</h3>
+                        <h3 className="text-xl font-black text-gray-900 mt-1">${Number(reports?.summary?.total_revenue || 0).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</h3>
                     </div>
                     <div className="w-10 h-10 bg-purple-50 rounded-lg flex items-center justify-center text-purple-500">
                         <ShoppingCart size={20} />
@@ -205,7 +211,7 @@ export default function Expenses() {
                 <div className="card p-4 flex justify-between items-center border-l-4 border-l-rose-500 shadow-sm rounded-xl bg-white hover:shadow-md transition-shadow">
                     <div>
                         <p className="text-[11px] text-gray-500 font-bold uppercase tracking-wider">Total Expenses</p>
-                        <h3 className="text-xl font-black text-gray-900 mt-1">${Number(summary.overall_total || 0).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</h3>
+                        <h3 className="text-xl font-black text-gray-900 mt-1">${Number(dynamicExpenseTotal || 0).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</h3>
                     </div>
                     <div className="w-10 h-10 bg-rose-50 rounded-lg flex items-center justify-center text-rose-500">
                         <DollarSign size={20} />
@@ -215,7 +221,7 @@ export default function Expenses() {
                 <div className="card p-4 flex justify-between items-center border-l-4 border-l-orange-500 shadow-sm rounded-xl bg-white hover:shadow-md transition-shadow">
                     <div>
                         <p className="text-[11px] text-gray-500 font-bold uppercase tracking-wider">Number of Expenses</p>
-                        <h3 className="text-xl font-black text-gray-900 mt-1">{expenses.length || 0}</h3>
+                        <h3 className="text-xl font-black text-gray-900 mt-1">{dynamicExpenseCount || 0}</h3>
                     </div>
                     <div className="w-10 h-10 bg-orange-50 rounded-lg flex items-center justify-center text-orange-500">
                         <List size={20} />
@@ -225,7 +231,7 @@ export default function Expenses() {
                 <div className="card p-4 flex justify-between items-center border-l-4 border-l-purple-500 shadow-sm rounded-xl bg-white hover:shadow-md transition-shadow">
                     <div>
                         <p className="text-[11px] text-gray-500 font-bold uppercase tracking-wider">Categories</p>
-                        <h3 className="text-xl font-black text-gray-900 mt-1">{summary.by_category?.length || 0}</h3>
+                        <h3 className="text-xl font-black text-gray-900 mt-1">{dynamicCategoriesCount || 0}</h3>
                     </div>
                     <div className="w-10 h-10 bg-purple-50 rounded-lg flex items-center justify-center text-purple-500">
                         <Tag size={20} />

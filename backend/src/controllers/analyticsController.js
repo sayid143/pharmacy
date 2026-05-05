@@ -602,7 +602,7 @@ const getDetailedReportData = async (whereSales, whereExpenses, replacements, ty
 const getDailyReport = async (req, res, next) => {
     try {
         const now = new Date();
-        const localDate = new Date().toISOString().split('T')[0];
+        const localDate = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
 
         const whereSales = { 
             status: 'completed',
@@ -611,7 +611,7 @@ const getDailyReport = async (req, res, next) => {
             ]
         };
         const whereExpenses = { expense_date: localDate };
-        const data = await getDetailedReportData(whereSales, whereExpenses, [localDate, localDate], 'daily');
+        const data = await getDetailedReportData(whereSales, whereExpenses, [`${localDate} 00:00:00`, `${localDate} 23:59:59`], 'daily');
         res.json({ success: true, data });
     } catch (err) {
         next(err);
@@ -623,8 +623,8 @@ const getWeeklyReport = async (req, res, next) => {
         const today = new Date();
         const lastWeek = new Date(today);
         lastWeek.setDate(today.getDate() - 7);
-        const startStr = lastWeek.toISOString().split('T')[0];
-        const endStr = today.toISOString().split('T')[0];
+        const startStr = `${lastWeek.getFullYear()}-${String(lastWeek.getMonth() + 1).padStart(2, '0')}-${String(lastWeek.getDate()).padStart(2, '0')}`;
+        const endStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
         
         const whereSales = { 
             status: 'completed',
@@ -633,7 +633,7 @@ const getWeeklyReport = async (req, res, next) => {
             ]
         };
         const whereExpenses = { expense_date: { [Op.between]: [startStr, endStr] } };
-        const data = await getDetailedReportData(whereSales, whereExpenses, [startStr, endStr], 'weekly');
+        const data = await getDetailedReportData(whereSales, whereExpenses, [`${startStr} 00:00:00`, `${endStr} 23:59:59`], 'weekly');
         res.json({ success: true, data });
     } catch (err) {
         next(err);
@@ -644,8 +644,8 @@ const getReportByMonth = async (req, res, next) => {
     try {
         const now = new Date();
         const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-        const startStr = monthStart.toISOString().split('T')[0];
-        const endStr = now.toISOString().split('T')[0];
+        const startStr = `${monthStart.getFullYear()}-${String(monthStart.getMonth() + 1).padStart(2, '0')}-01`;
+        const endStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
         
         const whereSales = { 
             status: 'completed',
@@ -654,7 +654,7 @@ const getReportByMonth = async (req, res, next) => {
             ]
         };
         const whereExpenses = { expense_date: { [Op.between]: [startStr, endStr] } };
-        const data = await getDetailedReportData(whereSales, whereExpenses, [startStr, endStr], 'monthly');
+        const data = await getDetailedReportData(whereSales, whereExpenses, [`${startStr} 00:00:00`, `${endStr} 23:59:59`], 'monthly');
         res.json({ success: true, data });
     } catch (err) {
         next(err);
@@ -672,7 +672,7 @@ const getCustomReport = async (req, res, next) => {
             created_at: { [Op.gte]: start, [Op.lte]: end }
         };
         const whereExpenses = { expense_date: { [Op.gte]: start, [Op.lte]: end } };
-        const data = await getDetailedReportData(whereSales, whereExpenses, [start, end], 'custom');
+        const data = await getDetailedReportData(whereSales, whereExpenses, [`${start} 00:00:00`, `${end} 23:59:59`], 'custom');
         res.json({ success: true, data });
     } catch (err) {
         next(err);

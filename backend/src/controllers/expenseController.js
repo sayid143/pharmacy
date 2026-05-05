@@ -145,14 +145,14 @@ const getExpenseSummary = async (req, res, next) => {
         });
 
         const today = new Date();
-        const startOfTodayStr = today.toISOString().split('T')[0];
+        const startOfTodayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
         
         const startOfWeekDate = new Date(today);
         startOfWeekDate.setDate(today.getDate() - today.getDay() + (today.getDay() === 0 ? -6 : 1)); // Monday
-        const startOfWeekStr = startOfWeekDate.toISOString().split('T')[0];
+        const startOfWeekStr = `${startOfWeekDate.getFullYear()}-${String(startOfWeekDate.getMonth() + 1).padStart(2, '0')}-${String(startOfWeekDate.getDate()).padStart(2, '0')}`;
 
         const startOfMonthDate = new Date(today.getFullYear(), today.getMonth(), 1);
-        const startOfMonthStr = startOfMonthDate.toISOString().split('T')[0];
+        const startOfMonthStr = `${startOfMonthDate.getFullYear()}-${String(startOfMonthDate.getMonth() + 1).padStart(2, '0')}-01`;
 
         const todayTotal = await db.Expense.sum('amount', {
             where: { expense_date: startOfTodayStr }
