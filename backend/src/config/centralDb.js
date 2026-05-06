@@ -11,6 +11,19 @@ const centralSequelize = new Sequelize(
         port: parseInt(process.env.DB_PORT) || 3306,
         dialect: 'mysql',
         logging: false,
+        pool: { max: 10, min: 0, acquire: 60000, idle: 10000 },
+        retry: {
+            match: [
+                /SequelizeConnectionError/,
+                /SequelizeConnectionRefusedError/,
+                /SequelizeHostNotFoundError/,
+                /SequelizeHostNotReachableError/,
+                /SequelizeInvalidConnectionError/,
+                /SequelizeConnectionTimedOutError/,
+                /Connection lost/
+            ],
+            max: 5
+        },
         define: {
             timestamps: true,
             underscored: true,
@@ -63,9 +76,19 @@ const centralDb = {
         });
         await connection.query(`CREATE DATABASE IF NOT EXISTS ${dbName} CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci`);
         await connection.end();
-
-        await centralSequelize.authenticate();
-        await centralSequelize.sync();
+        
+        let retries = 5;
+        while (retries > 0) {
+            try {
+                await centralSequelize.authenticate();
+                await centralSequelize.sync();
+                break;
+            } catch (err) {
+                retries--;
+                if (retries === 0) throw err;
+                await new Promise(res => setTimeout(res, 2000));
+            }
+        }
         
         // Seed default tenant if none exists
         const count = await Tenant.count();

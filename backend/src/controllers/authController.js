@@ -6,7 +6,7 @@ import logger from '../middleware/logger.js';
 
 const register = async (req, res, next) => {
     try {
-        const { name, email, password, role_id, branch_id, phone } = req.body;
+        const { name, email, password, role_id, branch_id, phone, branch_name, location } = req.body;
 
         const existing = await db.User.findOne({ where: { email } });
         if (existing) {
@@ -22,7 +22,9 @@ const register = async (req, res, next) => {
             password,
             role_id: role_id || 3,
             branch_id: branch_id || null,
-            phone: phone || null
+            phone: phone || null,
+            branch_name: branch_name || null,
+            location: location || null
         });
 
         await logActivity(user.id, 'register', 'user', user.id, null, { name, email }, req);
@@ -126,7 +128,8 @@ const getProfile = async (req, res, next) => {
             data: {
                 ...userData,
                 role_name: userData.role?.name,
-                branch_name: userData.branch?.name
+                branch_name: userData.branch?.name || userData.branch_name,
+                location: userData.branch?.address || userData.location
             }
         });
     } catch (err) {

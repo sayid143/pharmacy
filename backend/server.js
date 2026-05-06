@@ -1,4 +1,4 @@
-import 'dotenv/config'; // Loaded from backend/.env
+import 'dotenv/config'; // Updated at 2026-05-06T17:25
 import app from './src/app.js';
 
 import db from './src/config/db.js';

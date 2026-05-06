@@ -100,7 +100,17 @@ const getTenantDb = async (tenant) => {
 
     // Optional: Sync database if it doesn't exist or is new
     // In production, migrations are preferred
-    await sequelize.authenticate();
+    let retries = 3;
+    while (retries > 0) {
+        try {
+            await sequelize.authenticate();
+            break;
+        } catch (err) {
+            retries--;
+            if (retries === 0) throw err;
+            await new Promise(res => setTimeout(res, 1000));
+        }
+    }
     
     dbCache.set(tenant.tenant_code, db);
     return db;

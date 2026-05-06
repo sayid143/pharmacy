@@ -54,9 +54,18 @@ export const AuthProvider = ({ children }) => {
 
     const isAdmin = user?.role_name === 'admin';
     const isPharmacist = user?.role_name === 'pharmacist' || isAdmin;
+    const isCashier = user?.role_name === 'cashier' || isPharmacist; // Cashier permissions are a subset of Pharmacist/Admin
+    
+    const canDelete = isAdmin;
+    const canEdit = isPharmacist;
+    const canProcessSale = isCashier;
 
     return (
-        <AuthContext.Provider value={{ user, loading, login, logout, register, fetchProfile, isAdmin, isPharmacist }}>
+        <AuthContext.Provider value={{ 
+            user, loading, login, logout, register, fetchProfile, 
+            isAdmin, isPharmacist, isCashier,
+            canDelete, canEdit, canProcessSale 
+        }}>
             {children}
         </AuthContext.Provider>
     );

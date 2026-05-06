@@ -7,6 +7,7 @@ import {
     Printer, TrendingDown, Wallet, Smartphone
 } from 'lucide-react';
 import api from '../services/api';
+import { useAuth } from '../context/AuthContext';
 import toast from 'react-hot-toast';
 import InvoiceReceipt from '../components/InvoiceReceipt';
 
@@ -86,6 +87,7 @@ const PAYMENT_BADGE = {
 const getTimestamp = (tx) => tx.created_at || tx.createdAt || tx.date || null;
 
 export default function Transactions() {
+    const { canEdit, canDelete } = useAuth();
     const navigate = useNavigate();
     const [transactions, setTransactions] = useState([]);
     const [loading, setLoading] = useState(false);
@@ -629,20 +631,24 @@ export default function Transactions() {
                                                         >
                                                             <Printer size={12} /> Invoice
                                                         </button>
-                                                        <button
-                                                            onClick={() => handleEdit(tx)}
-                                                            className="flex items-center gap-1.5 px-2 py-1.5 rounded bg-amber-50/80 text-amber-700 hover:bg-amber-100/80 text-[11px] font-bold transition-all cursor-pointer"
-                                                            title="Edit / re-open in Sales"
-                                                        >
-                                                            <Pencil size={12} /> Edit
-                                                        </button>
-                                                        <button
-                                                            onClick={() => setDeleteConfirm(tx)}
-                                                            className="flex items-center gap-1.5 px-2 py-1.5 rounded bg-rose-50/80 text-rose-700 hover:bg-rose-100/80 text-[11px] font-bold transition-all cursor-pointer"
-                                                            title="Delete transaction"
-                                                        >
-                                                            <Trash2 size={12} strokeWidth={2.5} />
-                                                        </button>
+                                                        {canEdit && (
+                                                            <button
+                                                                onClick={() => handleEdit(tx)}
+                                                                className="flex items-center gap-1.5 px-2 py-1.5 rounded bg-amber-50/80 text-amber-700 hover:bg-amber-100/80 text-[11px] font-bold transition-all cursor-pointer"
+                                                                title="Edit / re-open in Sales"
+                                                            >
+                                                                <Pencil size={12} /> Edit
+                                                            </button>
+                                                        )}
+                                                        {canDelete && (
+                                                            <button
+                                                                onClick={() => setDeleteConfirm(tx)}
+                                                                className="flex items-center gap-1.5 px-2 py-1.5 rounded bg-rose-50/80 text-rose-700 hover:bg-rose-100/80 text-[11px] font-bold transition-all cursor-pointer"
+                                                                title="Delete transaction"
+                                                            >
+                                                                <Trash2 size={12} strokeWidth={2.5} />
+                                                            </button>
+                                                        )}
                                                     </div>
                                                 </td>
                                             </tr>

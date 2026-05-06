@@ -6,8 +6,10 @@ import {
 import api from '../services/api';
 import toast from 'react-hot-toast';
 import { format } from 'date-fns';
+import { useAuth } from '../context/AuthContext';
 
 export default function Expenses() {
+    const { isPharmacist, isAdmin } = useAuth();
     const [expenses, setExpenses] = useState([]);
     const [summary, setSummary] = useState({});
     const [reports, setReports] = useState({});
@@ -213,9 +215,11 @@ export default function Expenses() {
                     </div>
                     <h1 className="text-2xl font-bold text-gray-900">Income & Expense Management</h1>
                 </div>
-                <button onClick={() => openModal()} className="btn-primary flex items-center gap-2 px-5 py-2.5 rounded-lg font-medium shadow-sm cursor-pointer">
-                    <Plus size={18} /> Add Expense
-                </button>
+                {isPharmacist && (
+                    <button onClick={() => openModal()} className="btn-primary flex items-center gap-2 px-5 py-2.5 rounded-lg font-medium shadow-sm cursor-pointer">
+                        <Plus size={18} /> Add Expense
+                    </button>
+                )}
             </div>
 
             {/* Stats Cards Row 1 */}
@@ -362,12 +366,16 @@ export default function Expenses() {
                                                 {item.payment_method}
                                             </span>
                                         </td>
-                                        <td className="px-4 py-2.5 text-right whitespace-nowrap print:hidden">
-                                            <div className="flex gap-1.5 justify-end items-center">
-                                                <button onClick={() => openModal(item)} className="p-1 text-blue-600 hover:bg-blue-50 rounded transition-colors cursor-pointer"><Edit size={16} /></button>
-                                                <button onClick={() => setDeleteConfirm(item)} className="p-1 text-rose-600 hover:bg-rose-50 rounded transition-colors cursor-pointer"><Trash2 size={16} strokeWidth={2.5} /></button>
-                                            </div>
-                                        </td>
+                                         <td className="px-4 py-2.5 text-right whitespace-nowrap print:hidden">
+                                             <div className="flex gap-1.5 justify-end items-center">
+                                                 {isPharmacist && (
+                                                     <button onClick={() => openModal(item)} className="p-1 text-blue-600 hover:bg-blue-50 rounded transition-colors cursor-pointer"><Edit size={16} /></button>
+                                                 )}
+                                                 {isAdmin && (
+                                                     <button onClick={() => setDeleteConfirm(item)} className="p-1 text-rose-600 hover:bg-rose-50 rounded transition-colors cursor-pointer"><Trash2 size={16} strokeWidth={2.5} /></button>
+                                                 )}
+                                             </div>
+                                         </td>
                                     </tr>
                                 ))
                             )}

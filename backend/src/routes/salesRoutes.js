@@ -11,6 +11,6 @@ router.get('/', getSales);
 router.get('/:id', getSale);
 router.put('/:id', requireRole(['admin', 'pharmacist']), updateSale);
 router.post('/:id/refund', requireRole(['admin', 'pharmacist']), refundSale);
-router.delete('/:id', requireRole(['admin', 'pharmacist']), deleteSale);
+router.delete('/:id', requireRole(['admin']), deleteSale);
 
 export default router;

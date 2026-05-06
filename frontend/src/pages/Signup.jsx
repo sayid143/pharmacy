@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
-import { Eye, EyeOff, User, Mail, Phone, Lock, UserPlus, Activity, Shield } from 'lucide-react';
+import { Eye, EyeOff, User, Mail, Phone, Lock, UserPlus, Activity, Shield, Building, MapPin } from 'lucide-react';
 import { useNavigate, Link } from 'react-router-dom';
 import api from '../services/api';
 import toast from 'react-hot-toast';
@@ -41,6 +41,8 @@ export default function Signup() {
             password: '',
             confirmPassword: '',
             role_id: '',
+            branch_name: '',
+            location: '',
         },
     });
 
@@ -56,6 +58,8 @@ export default function Signup() {
                 phone: data.phone,
                 password: data.password,
                 role_id: parseInt(data.role_id, 10),
+                branch_name: data.branch_name,
+                location: data.location,
             });
             toast.success('Account created successfully! Please sign in.');
             navigate('/login', { replace: true });
@@ -133,6 +137,40 @@ export default function Signup() {
                     </div>
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        {/* Branch */}
+                        <div>
+                            <div className="relative group">
+                                <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-blue-500 transition-colors z-10">
+                                    <Building size={20} />
+                                </div>
+                                <input
+                                    type="text"
+                                    placeholder="Branch Name (Optional)"
+                                    className={`w-full h-14 pl-12 pr-4 bg-gray-50/50 hover:bg-white border-2 rounded-2xl transition-all outline-none font-medium placeholder:text-gray-400 text-gray-700
+                                        ${errors.branch_name ? 'border-red-200 focus:border-red-400 bg-white' : 'border-gray-100 focus:border-blue-400 focus:bg-white'}`}
+                                    {...register('branch_name')}
+                                />
+                            </div>
+                        </div>
+
+                        {/* Location */}
+                        <div>
+                            <div className="relative group">
+                                <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-blue-500 transition-colors z-10">
+                                    <MapPin size={20} />
+                                </div>
+                                <input
+                                    type="text"
+                                    placeholder="Location (Optional)"
+                                    className={`w-full h-14 pl-12 pr-4 bg-gray-50/50 hover:bg-white border-2 rounded-2xl transition-all outline-none font-medium placeholder:text-gray-400 text-gray-700
+                                        ${errors.location ? 'border-red-200 focus:border-red-400 bg-white' : 'border-gray-100 focus:border-blue-400 focus:bg-white'}`}
+                                    {...register('location')}
+                                />
+                            </div>
+                        </div>
+                    </div>
+
+                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         {/* Phone */}
                         <div>
                             <div className="relative group">

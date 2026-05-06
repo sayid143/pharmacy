@@ -3,6 +3,7 @@ import { Search, Plus, X, DollarSign, AlertTriangle, Check, Clock, CheckCircle2,
 import { useForm } from 'react-hook-form';
 import api from '../services/api';
 import toast from 'react-hot-toast';
+import { useAuth } from '../context/AuthContext';
 import { format, startOfDay, endOfDay, startOfWeek, endOfWeek, startOfMonth, endOfMonth, parseISO } from 'date-fns';
 
 const StatCard = ({ title, value, icon: Icon, color, bg }) => {
@@ -33,6 +34,7 @@ const StatCard = ({ title, value, icon: Icon, color, bg }) => {
 };
 
 export default function Debts() {
+    const { isAdmin, isPharmacist, canDelete } = useAuth();
     const [debts, setDebts] = useState([]);
     const [summary, setSummary] = useState({});
     const [loading, setLoading] = useState(true);
@@ -133,13 +135,15 @@ export default function Debts() {
                     <h1 className="text-2xl font-bold text-gray-900">Debts Management</h1>
                     <p className="text-gray-500 text-sm mt-1">Track and manage customer debts across the pharmacy</p>
                 </div>
-                <button
-                    onClick={() => { reset(); setAddModal(true); }}
-                    className="btn-primary flex items-center gap-2 px-6 py-2.5 rounded-xl shadow-lg shadow-blue-500/20 active:scale-95 transition-all"
-                >
-                    <Plus size={18} strokeWidth={2.5} />
-                    <span className="font-bold tracking-tight">Add New Debt</span>
-                </button>
+                {isPharmacist && (
+                    <button
+                        onClick={() => { reset(); setAddModal(true); }}
+                        className="btn-primary flex items-center gap-2 px-6 py-2.5 rounded-xl shadow-lg shadow-blue-500/20 active:scale-95 transition-all"
+                    >
+                        <Plus size={18} strokeWidth={2.5} />
+                        <span className="font-bold tracking-tight">Add New Debt</span>
+                    </button>
+                )}
             </div>
 
             {/* Top Stat Cards (Like Screenshot) */}
@@ -315,34 +319,35 @@ export default function Debts() {
                                                 }`}>
                                                 {d.payment_method || '—'}
                                             </span>
-                                        </td>
-                                        <td className="px-4 py-2.5 text-right print:hidden">
-                                            <div className="flex gap-2 justify-end items-center">
-                                                {d.status !== 'paid' ? (
-                                                    <button
-                                                        onClick={() => setPaymentModal(d)}
-                                                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-blue-200 bg-white text-blue-600 hover:border-blue-400 transition-all cursor-pointer text-[12px] font-bold shadow-sm"
-                                                    >
-                                                        <span className="text-[10px] bg-blue-50 px-1 rounded">ETB</span>
-                                                        <span>Pay</span>
-                                                    </button>
-                                                ) : (
-                                                    <div className="flex items-center gap-1 text-[11px] font-bold text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-lg border border-emerald-100">
-                                                        <CheckCircle2 size={12} />
-                                                        Cleared
-                                                    </div>
-                                                )}
-
-                                                <button
-                                                    onClick={() => setDeleteConfirm(d)}
-                                                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-rose-50 text-rose-600 hover:bg-rose-100 hover:text-rose-700 transition-all cursor-pointer text-[12px] font-bold border border-rose-100 shadow-sm group"
-                                                    title="Delete Record"
-                                                >
-                                                    <Trash2 size={14} strokeWidth={2.5} className="group-hover:scale-110 transition-transform" />
-                                                    <span>Delete</span>
-                                                </button>
-                                            </div>
-                                        </td>
+                                                                         <td className="px-4 py-2.5 text-right print:hidden">
+                                             <div className="flex gap-2 justify-end items-center">
+                                                 {d.status !== 'paid' ? (
+                                                     <button
+                                                         onClick={() => setPaymentModal(d)}
+                                                         className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-blue-200 bg-white text-blue-600 hover:border-blue-400 transition-all cursor-pointer text-[12px] font-bold shadow-sm"
+                                                     >
+                                                         <span className="text-[10px] bg-blue-50 px-1 rounded">ETB</span>
+                                                         <span>Pay</span>
+                                                     </button>
+                                                 ) : (
+                                                     <div className="flex items-center gap-1 text-[11px] font-bold text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-lg border border-emerald-100">
+                                                         <CheckCircle2 size={12} />
+                                                         Cleared
+                                                     </div>
+                                                 )}
+ 
+                                                 {canDelete && (
+                                                     <button
+                                                         onClick={() => setDeleteConfirm(d)}
+                                                         className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-rose-50 text-rose-600 hover:bg-rose-100 hover:text-rose-700 transition-all cursor-pointer text-[12px] font-bold border border-rose-100 shadow-sm group"
+                                                         title="Delete Record"
+                                                     >
+                                                         <Trash2 size={14} strokeWidth={2.5} className="group-hover:scale-110 transition-transform" />
+                                                         <span>Delete</span>
+                                                     </button>
+                                                 )}
+                                             </div>
+                                         </td>         </td>
                                     </tr>
                                 ))
                             ) : (

@@ -27,8 +27,20 @@ const staticSequelize = new Sequelize(
         port: parseInt(process.env.DB_PORT) || 3306,
         dialect: 'mysql',
         logging: false,
-        pool: { max: 20, min: 0, acquire: 30000, idle: 10000 },
+        pool: { max: 20, min: 0, acquire: 60000, idle: 10000 },
         timezone: '+00:00',
+        retry: {
+            match: [
+                /SequelizeConnectionError/,
+                /SequelizeConnectionRefusedError/,
+                /SequelizeHostNotFoundError/,
+                /SequelizeHostNotReachableError/,
+                /SequelizeInvalidConnectionError/,
+                /SequelizeConnectionTimedOutError/,
+                /Connection lost/
+            ],
+            max: 5
+        },
         define: {
             timestamps: true,
             underscored: true,
@@ -76,9 +88,20 @@ const db = new Proxy(staticDb, {
 
 db.testConnection = async () => {
     try {
-        await staticSequelize.authenticate();
-        logger.info('Static MySQL database connected successfully');
-        return true;
+        let retries = 5;
+        while (retries > 0) {
+            try {
+                await staticSequelize.authenticate();
+                logger.info('Static MySQL database connected successfully');
+                return true;
+            } catch (err) {
+                retries--;
+                logger.warn(`Static database connection attempt failed (${retries} retries left): ${err.message}`);
+                if (retries === 0) throw err;
+                await new Promise(res => setTimeout(res, 2000));
+            }
+        }
+        return false;
     } catch (err) {
         logger.error(`Static database connection failed: ${err.message}`);
         return false;

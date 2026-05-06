@@ -1,8 +1,9 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Plus, X, Search, Package, Phone, Mail, Building, Edit, Truck, Clock } from 'lucide-react';
+import { Plus, X, Search, Package, Phone, Mail, Building, Edit, Truck, Clock, Trash2 } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import api from '../services/api';
 import toast from 'react-hot-toast';
+import { useAuth } from '../context/AuthContext';
 
 const StatCard = ({ title, value, icon: Icon, color, bg }) => {
     const borderClass = {
@@ -32,6 +33,7 @@ const StatCard = ({ title, value, icon: Icon, color, bg }) => {
 };
 
 export default function Suppliers() {
+    const { isAdmin, isPharmacist, canEdit, canDelete } = useAuth();
     const [suppliers, setSuppliers] = useState([]);
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState('');
@@ -58,6 +60,17 @@ export default function Suppliers() {
 
     const openAdd = () => { reset(); setModal('add'); };
     const openEdit = (s) => { Object.entries(s).forEach(([k, v]) => setValue(k, v)); setModal(s); };
+
+    const onDelete = async (id) => {
+        if (!window.confirm('Are you sure you want to delete this supplier?')) return;
+        try {
+            await api.delete(`/suppliers/${id}`);
+            toast.success('Supplier deleted!');
+            fetchData();
+        } catch (e) {
+            toast.error('Failed to delete supplier');
+        }
+    };
 
     const onSave = async (data) => {
         setSaving(true);
@@ -92,9 +105,11 @@ export default function Suppliers() {
                     <h1 className="text-2xl font-bold text-gray-900">Supplier Management</h1>
                     <p className="text-gray-500 text-sm mt-1">Manage wholesale vendors and order contacts</p>
                 </div>
-                <button onClick={openAdd} className="btn-primary">
-                    <Plus size={16} /> Add Supplier
-                </button>
+                {isPharmacist && (
+                    <button onClick={openAdd} className="btn-primary">
+                        <Plus size={16} /> Add Supplier
+                    </button>
+                )}
             </div>
 
             {/* Stat Cards */}
@@ -144,8 +159,8 @@ export default function Suppliers() {
                                 <th className="px-4 py-3 whitespace-nowrap">Supplier / Contact</th>
                                 <th className="px-4 py-3 whitespace-nowrap">Contact Info</th>
                                 <th className="px-4 py-3 whitespace-nowrap">Terms</th>
-                                <th className="px-4 py-3 whitespace-nowrap">Status</th>
-                                <th className="px-4 py-3 text-right whitespace-nowrap">Actions</th>
+                                 <th className="px-4 py-3 whitespace-nowrap">Status</th>
+                                 <th className="px-4 py-3 text-right whitespace-nowrap">Actions</th>
                             </tr>
                         </thead>
                         <tbody className="bg-white text-[13px]">
@@ -200,11 +215,20 @@ export default function Suppliers() {
                                                 </div>
                                             </button>
                                         </td>
-                                        <td className="px-4 py-2.5 text-right whitespace-nowrap">
-                                            <button onClick={(e) => { e.stopPropagation(); openEdit(s); }} className="w-8 h-8 rounded-lg flex items-center justify-center text-blue-600 hover:bg-blue-50 transition-colors ml-auto">
-                                                <Edit size={16} />
-                                            </button>
-                                        </td>
+                                         <td className="px-4 py-2.5 text-right whitespace-nowrap">
+                                             <div className="flex items-center justify-end gap-2">
+                                                 {canEdit && (
+                                                     <button onClick={(e) => { e.stopPropagation(); openEdit(s); }} className="w-8 h-8 rounded-lg flex items-center justify-center text-blue-600 hover:bg-blue-50 transition-colors">
+                                                         <Edit size={16} />
+                                                     </button>
+                                                 )}
+                                                 {canDelete && (
+                                                     <button onClick={(e) => { e.stopPropagation(); onDelete(s.id); }} className="w-8 h-8 rounded-lg flex items-center justify-center text-rose-600 hover:bg-rose-50 transition-colors">
+                                                         <Trash2 size={16} />
+                                                     </button>
+                                                 )}
+                                             </div>
+                                         </td>
                                     </tr>
                                 ))
                             ) : (

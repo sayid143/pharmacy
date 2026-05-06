@@ -47,6 +47,10 @@ const Customer = (sequelize, DataTypes) => {
         is_active: {
             type: DataTypes.BOOLEAN,
             defaultValue: true
+        },
+        branch_id: {
+            type: DataTypes.INTEGER,
+            allowNull: true
         }
     }, {
         tableName: 'customers',
@@ -56,6 +60,7 @@ const Customer = (sequelize, DataTypes) => {
     Customer.associate = (models) => {
         Customer.hasMany(models.Sale, { foreignKey: 'customer_id', as: 'sales' });
         Customer.hasMany(models.Debt, { foreignKey: 'customer_id', as: 'debts' });
+        Customer.belongsTo(models.Branch, { foreignKey: 'branch_id', as: 'branch' });
     };
 
     return Customer;

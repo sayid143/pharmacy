@@ -39,6 +39,16 @@ const User = (sequelize, DataTypes) => {
             type: DataTypes.INTEGER,
             allowNull: true
         },
+        branch_name: {
+            type: DataTypes.STRING(100),
+            allowNull: true,
+            field: 'branch_name'
+        },
+        location: {
+            type: DataTypes.STRING(255),
+            allowNull: true,
+            field: 'location'
+        },
         is_active: {
             type: DataTypes.BOOLEAN,
             defaultValue: true

@@ -33,7 +33,7 @@ const StatCard = ({ title, value, icon: Icon, color, bg }) => {
 };
 
 export default function Medicines() {
-    const { isPharmacist } = useAuth();
+    const { isPharmacist, isAdmin } = useAuth();
     const [searchParams] = useSearchParams();
     const [medicines, setMedicines] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -214,9 +214,11 @@ export default function Medicines() {
                                                     <Link to={`/medicines/edit/${med.id}`} className="p-1 rounded text-blue-600 hover:bg-blue-50 transition-colors" title="Edit">
                                                         <Edit size={16} />
                                                     </Link>
-                                                    <button onClick={() => setDeleteId(med.id)} className="p-1 rounded text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer" title="Delete">
-                                                        <Trash2 size={16} strokeWidth={2.5} />
-                                                    </button>
+                                                    {isAdmin && (
+                                                        <button onClick={() => setDeleteId(med.id)} className="p-1 rounded text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer" title="Delete">
+                                                            <Trash2 size={16} strokeWidth={2.5} />
+                                                        </button>
+                                                    )}
                                                 </div>
                                             </td>
                                         )}

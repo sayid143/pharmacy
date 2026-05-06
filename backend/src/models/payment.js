@@ -35,6 +35,10 @@ const Payment = (sequelize, DataTypes) => {
         user_id: {
             type: DataTypes.INTEGER,
             allowNull: false
+        },
+        branch_id: {
+            type: DataTypes.INTEGER,
+            allowNull: true
         }
     }, {
         tableName: 'payments'
@@ -44,6 +48,7 @@ const Payment = (sequelize, DataTypes) => {
         Payment.belongsTo(models.Debt, { foreignKey: 'debt_id', as: 'debt' });
         Payment.belongsTo(models.Customer, { foreignKey: 'customer_id', as: 'customer' });
         Payment.belongsTo(models.User, { foreignKey: 'user_id', as: 'user' });
+        Payment.belongsTo(models.Branch, { foreignKey: 'branch_id', as: 'branch' });
     };
 
     return Payment;

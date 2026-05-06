@@ -6,6 +6,7 @@ import {
     ResponsiveContainer, PieChart, Pie, Cell, Legend
 } from 'recharts';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import {
     TrendingUp, DollarSign, ShoppingCart, Download, Calendar,
     ArrowUpRight, ArrowDownRight, Loader2, Printer, AlertTriangle,
@@ -76,6 +77,7 @@ const PAYMENT_BADGE = {
 };
 
 export default function Reports() {
+    const { canEdit, canDelete } = useAuth();
     const [data, setData] = useState(null);
     const [initialLoading, setInitialLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
@@ -897,16 +899,20 @@ export default function Reports() {
                                                                         <button onClick={() => openDetail(t)} className="flex items-center gap-1.5 px-2 py-1.5 rounded bg-blue-50 text-blue-700 hover:bg-blue-100 text-[11px] font-bold transition-all cursor-pointer">
                                                                             <Eye size={14} /> View
                                                                         </button>
-                                                                        <button onClick={() => { setSelectedTx(t); setInvoiceModalOpen(true); }} className="flex items-center gap-1.5 px-2 py-1.5 rounded bg-emerald-50 text-emerald-700 hover:bg-emerald-100 text-[11px] font-bold transition-all cursor-pointer">
-                                                                            <Printer size={14} /> Invoice
-                                                                        </button>
-                                                                        <button onClick={() => handleEdit(t)} className="flex items-center gap-1.5 px-2 py-1.5 rounded bg-amber-50 text-amber-700 hover:bg-amber-100 text-[11px] font-bold transition-all cursor-pointer">
-                                                                            <Pencil size={14} /> Edit
-                                                                        </button>
-                                                                        <button onClick={() => setDeleteConfirm(t)} className="flex items-center gap-1.5 px-2 py-1.5 rounded bg-rose-50 text-rose-700 hover:bg-rose-100 text-[11px] font-bold transition-all cursor-pointer">
-                                                                            <Trash2 size={14} />
-                                                                        </button>
-                                                                    </div>
+                                                                         <button onClick={() => { setSelectedTx(t); setInvoiceModalOpen(true); }} className="flex items-center gap-1.5 px-2 py-1.5 rounded bg-emerald-50 text-emerald-700 hover:bg-emerald-100 text-[11px] font-bold transition-all cursor-pointer">
+                                                                             <Printer size={14} /> Invoice
+                                                                         </button>
+                                                                         {canEdit && (
+                                                                             <button onClick={() => handleEdit(t)} className="flex items-center gap-1.5 px-2 py-1.5 rounded bg-amber-50 text-amber-700 hover:bg-amber-100 text-[11px] font-bold transition-all cursor-pointer">
+                                                                                 <Pencil size={14} /> Edit
+                                                                             </button>
+                                                                         )}
+                                                                         {canDelete && (
+                                                                             <button onClick={() => setDeleteConfirm(t)} className="flex items-center gap-1.5 px-2 py-1.5 rounded bg-rose-50 text-rose-700 hover:bg-rose-100 text-[11px] font-bold transition-all cursor-pointer">
+                                                                                 <Trash2 size={14} />
+                                                                             </button>
+                                                                         )}
+                                                                     </div>
                                                                 </td>
                                                             )}
                                                         </tr>
@@ -1020,14 +1026,18 @@ export default function Reports() {
                                                                         <Printer size={16} /> Receipt
                                                                     </button>
                                                                 </div>
-                                                                <div className="flex gap-2">
-                                                                    <button onClick={() => handleEdit(t)} className="p-2 rounded-lg bg-amber-50 text-amber-700 hover:bg-amber-100 transition-all cursor-pointer">
-                                                                        <Pencil size={16} />
-                                                                    </button>
-                                                                    <button onClick={() => setDeleteConfirm(t)} className="p-2 rounded-lg bg-rose-50 text-rose-700 hover:bg-rose-100 transition-all cursor-pointer">
-                                                                        <Trash2 size={16} />
-                                                                    </button>
-                                                                </div>
+                                                                 <div className="flex gap-2">
+                                                                     {canEdit && (
+                                                                         <button onClick={() => handleEdit(t)} className="p-2 rounded-lg bg-amber-50 text-amber-700 hover:bg-amber-100 transition-all cursor-pointer">
+                                                                             <Pencil size={16} />
+                                                                         </button>
+                                                                     )}
+                                                                     {canDelete && (
+                                                                         <button onClick={() => setDeleteConfirm(t)} className="p-2 rounded-lg bg-rose-50 text-rose-700 hover:bg-rose-100 transition-all cursor-pointer">
+                                                                             <Trash2 size={16} />
+                                                                         </button>
+                                                                     )}
+                                                                 </div>
                                                             </div>
                                                         )}
                                                     </div>

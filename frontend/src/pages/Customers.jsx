@@ -3,6 +3,7 @@ import { Plus, X, Search, Edit, Trash2, Users, DollarSign, Activity } from 'luci
 import { useForm } from 'react-hook-form';
 import api from '../services/api';
 import toast from 'react-hot-toast';
+import { useAuth } from '../context/AuthContext';
 
 const StatCard = ({ title, value, icon: Icon, color, bg }) => {
     const borderClass = {
@@ -32,6 +33,7 @@ const StatCard = ({ title, value, icon: Icon, color, bg }) => {
 };
 
 export default function Customers() {
+    const { isAdmin, isPharmacist, canEdit, canDelete } = useAuth();
     const [customers, setCustomers] = useState([]);
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState('');
@@ -62,6 +64,17 @@ export default function Customers() {
     const openAdd = () => { reset(); setModal('add'); };
     const openEdit = (c) => { Object.entries(c).forEach(([k, v]) => setValue(k, v)); setModal(c); };
 
+    const onDelete = async (id) => {
+        if (!window.confirm('Are you sure you want to delete this customer?')) return;
+        try {
+            await api.delete(`/customers/${id}`);
+            toast.success('Customer deleted!');
+            fetchData();
+        } catch (e) {
+            toast.error('Failed to delete customer');
+        }
+    };
+
     const onSave = async (data) => {
         setSaving(true);
         try {
@@ -85,9 +98,11 @@ export default function Customers() {
                     <h1 className="text-2xl font-bold text-gray-900">Customers Directory</h1>
                     <p className="text-gray-500 text-sm mt-1">Manage pharmacy customers and their credit limits</p>
                 </div>
-                <button onClick={openAdd} className="btn-primary">
-                    <Plus size={16} /> Add Customer
-                </button>
+                {isPharmacist && (
+                    <button onClick={openAdd} className="btn-primary">
+                        <Plus size={16} /> Add Customer
+                    </button>
+                )}
             </div>
 
             {/* Stat Cards */}
@@ -189,11 +204,20 @@ export default function Customers() {
                                                 <span className="text-gray-400">0</span>
                                             )}
                                         </td>
-                                        <td className="px-6 py-4 text-right">
-                                            <button onClick={(e) => { e.stopPropagation(); openEdit(c); }} className="w-8 h-8 rounded-lg flex items-center justify-center text-blue-600 hover:bg-blue-50 transition-colors ml-auto">
-                                                <Edit size={16} />
-                                            </button>
-                                        </td>
+                                         <td className="px-6 py-4 text-right">
+                                             <div className="flex items-center justify-end gap-2">
+                                                 {canEdit && (
+                                                     <button onClick={(e) => { e.stopPropagation(); openEdit(c); }} className="w-8 h-8 rounded-lg flex items-center justify-center text-blue-600 hover:bg-blue-50 transition-colors">
+                                                         <Edit size={16} />
+                                                     </button>
+                                                 )}
+                                                 {canDelete && (
+                                                     <button onClick={(e) => { e.stopPropagation(); onDelete(c.id); }} className="w-8 h-8 rounded-lg flex items-center justify-center text-rose-600 hover:bg-rose-50 transition-colors">
+                                                         <Trash2 size={16} />
+                                                     </button>
+                                                 )}
+                                             </div>
+                                         </td>
                                     </tr>
                                 ))
                             ) : (

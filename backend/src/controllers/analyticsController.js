@@ -52,12 +52,12 @@ const getDashboard = async (req, res, next) => {
         }
 
         const [lowStock] = await db.sequelize.query(
-            `SELECT COUNT(*) as count FROM medicines WHERE quantity <= min_stock_level AND is_active = TRUE`,
+            `SELECT COUNT(*) as count FROM medicines WHERE quantity <= min_stock_level AND is_active = TRUE${medBranchFilter}`,
             { type: QueryTypes.SELECT }
         );
 
         const [expiringSoon] = await db.sequelize.query(
-            `SELECT COUNT(*) as count FROM medicines WHERE expiry_date <= DATE_ADD(CURDATE(), INTERVAL 30 DAY) AND expiry_date > CURDATE() AND is_active = TRUE`,
+            `SELECT COUNT(*) as count FROM medicines WHERE expiry_date <= DATE_ADD(CURDATE(), INTERVAL 30 DAY) AND expiry_date > CURDATE() AND is_active = TRUE${medBranchFilter}`,
             { type: QueryTypes.SELECT }
         );
 
@@ -135,7 +135,7 @@ const getDashboard = async (req, res, next) => {
         let monthlyExpenses;
         try {
             const [results] = await db.sequelize.query(
-                `SELECT COALESCE(SUM(amount), 0) as total FROM expenses WHERE DATE(expense_date) >= ?`,
+                `SELECT COALESCE(SUM(amount), 0) as total FROM expenses WHERE DATE(expense_date) >= ?${expBranchFilter}`,
                 { replacements: [tzMonthStart], type: QueryTypes.SELECT }
             );
             monthlyExpenses = results;
@@ -151,7 +151,7 @@ const getDashboard = async (req, res, next) => {
                       COALESCE(SUM(si.profit), 0) as profit
                FROM sales s
                LEFT JOIN (SELECT sale_id, SUM((selling_price - purchase_price) * quantity) as profit FROM sale_items GROUP BY sale_id) si ON s.id = si.sale_id
-               WHERE s.status = 'completed'`,
+               WHERE s.status = 'completed'${branchFilter}`,
                 { type: QueryTypes.SELECT }
             );
             totalStats = results;
@@ -197,6 +197,7 @@ const getDashboard = async (req, res, next) => {
 
 const getMonthlyReport = async (req, res, next) => {
     try {
+        const branchFilter = getBranchQueryFilter(req, '');
         const { year = new Date().getFullYear(), month } = req.query;
 
         let dateFilter = 'YEAR(created_at) = ?';
@@ -210,7 +211,7 @@ const getMonthlyReport = async (req, res, next) => {
             `SELECT DATE(created_at) as date, COUNT(*) as transactions,
               SUM(total_amount) as revenue, SUM(tax_amount) as tax,
               SUM(discount_amount) as discounts
-       FROM sales WHERE ${dateFilter} AND status = 'completed'
+       FROM sales WHERE ${dateFilter} AND status = 'completed'${branchFilter}
        GROUP BY DATE(created_at) ORDER BY date ASC`,
             { replacements, type: QueryTypes.SELECT }
         );
@@ -375,8 +376,13 @@ const getReports = async (req, res, next) => {
 };
 
 
-const getDetailedReportData = async (whereSales, whereExpenses, replacements, type) => {
+const getDetailedReportData = async (req, whereSales, whereExpenses, replacements, type) => {
     try {
+        const branchFilter = getBranchQueryFilter(req, 's');
+        const expBranchFilter = getBranchQueryFilter(req, '');
+        const debtBranchFilter = getBranchQueryFilter(req, '');
+        const medBranchFilter = getBranchQueryFilter(req, 'm');
+        
         logger.info(`[Reports] Generating ${type} report with replacements: ${JSON.stringify(replacements)}`);
 
         // 1. Unified SQL for Sales KPIs (Revenue, Profit, Loss, Count)
@@ -395,7 +401,7 @@ const getDetailedReportData = async (whereSales, whereExpenses, replacements, ty
                  FROM sale_items 
                  GROUP BY sale_id
              ) si ON s.id = si.sale_id
-             WHERE s.status = 'completed' AND s.created_at >= ? AND s.created_at <= ?`,
+             WHERE s.status = 'completed' AND s.created_at >= ? AND s.created_at <= ?${branchFilter}`,
             { replacements, type: QueryTypes.SELECT }
         );
         
@@ -404,7 +410,7 @@ const getDetailedReportData = async (whereSales, whereExpenses, replacements, ty
 
         // 2. Expenses Summary
         const expenses = await db.Expense.findAll({
-            where: whereExpenses,
+            where: { ...whereExpenses, ...getBranchWhereFilter(req) },
             attributes: [
                 'category',
                 [db.sequelize.fn('SUM', db.sequelize.col('amount')), 'total'],
@@ -420,7 +426,7 @@ const getDetailedReportData = async (whereSales, whereExpenses, replacements, ty
         const salesCollected = await db.sequelize.query(
             `SELECT payment_method as name, SUM(amount_paid) as total_collected
              FROM sales
-             WHERE status = 'completed' AND created_at >= ? AND created_at <= ?
+             WHERE status = 'completed' AND created_at >= ? AND created_at <= ?${getBranchQueryFilter(req, '')}
              GROUP BY payment_method`,
             { replacements, type: QueryTypes.SELECT }
         );
@@ -428,7 +434,7 @@ const getDetailedReportData = async (whereSales, whereExpenses, replacements, ty
         const paymentsCollected = await db.sequelize.query(
             `SELECT payment_method as name, SUM(amount) as total_collected
              FROM payments
-             WHERE created_at >= ? AND created_at <= ?
+             WHERE created_at >= ? AND created_at <= ?${getBranchQueryFilter(req, '')}
              GROUP BY payment_method`,
             { replacements, type: QueryTypes.SELECT }
         );
@@ -458,7 +464,7 @@ const getDetailedReportData = async (whereSales, whereExpenses, replacements, ty
                 SUM(CASE WHEN paid_amount > 0 AND balance > 0 THEN balance ELSE 0 END) as partial_debt,
                 SUM(CASE WHEN balance > 0 THEN balance ELSE 0 END) as total_uncollected
              FROM debts
-             WHERE status != 'cancelled' AND created_at >= ? AND created_at <= ?`,
+             WHERE status != 'cancelled' AND created_at >= ? AND created_at <= ?${debtBranchFilter.replace('WHERE', 'AND')}`,
             { replacements, type: QueryTypes.SELECT }
         );
         const debtStats = (debtsGenerated && debtsGenerated.length > 0) ? debtsGenerated[0] : { full_debt: 0, partial_debt: 0, total_uncollected: 0 };
@@ -487,14 +493,14 @@ const getDetailedReportData = async (whereSales, whereExpenses, replacements, ty
                  FROM sale_items 
                  GROUP BY sale_id
              ) si ON s.id = si.sale_id
-             WHERE s.status = 'completed' AND s.created_at >= ? AND s.created_at <= ?
+             WHERE s.status = 'completed' AND s.created_at >= ? AND s.created_at <= ?${branchFilter}
              GROUP BY DATE(s.created_at)
              ORDER BY date ASC`,
             { replacements, type: QueryTypes.SELECT }
         );
 
         // Scope created_at specifically to avoid ambiguity when Sequelize generates a flat join without limit constraints 
-        const refinedWhere = { ...whereSales };
+        const refinedWhere = { ...whereSales, ...getBranchWhereFilter(req) };
         if (refinedWhere.created_at) {
             refinedWhere['$Sale.created_at$'] = refinedWhere.created_at;
             delete refinedWhere.created_at;
@@ -517,7 +523,8 @@ const getDetailedReportData = async (whereSales, whereExpenses, replacements, ty
 
         const recentPaymentsRaw = await db.Payment.findAll({
             where: {
-                created_at: { [Op.between]: [replacements[0], replacements[1]] }
+                created_at: { [Op.between]: [replacements[0], replacements[1]] },
+                ...getBranchWhereFilter(req)
             },
             include: [{ model: db.Customer, as: 'customer' }],
             order: [['created_at', 'DESC']]
@@ -569,7 +576,7 @@ const getDetailedReportData = async (whereSales, whereExpenses, replacements, ty
              FROM sale_items si
              JOIN medicines m ON si.medicine_id = m.id
              JOIN sales s ON si.sale_id = s.id
-             WHERE s.status = 'completed' AND s.created_at >= ? AND s.created_at <= ?
+             WHERE s.status = 'completed' AND s.created_at >= ? AND s.created_at <= ?${branchFilter.replace('WHERE', 'AND')}
              GROUP BY m.id
              ORDER BY sold_count DESC
              LIMIT 5`,
@@ -619,7 +626,7 @@ const getDailyReport = async (req, res, next) => {
             ]
         };
         const whereExpenses = { expense_date: localDate };
-        const data = await getDetailedReportData(whereSales, whereExpenses, [`${localDate} 00:00:00`, `${localDate} 23:59:59`], 'daily');
+        const data = await getDetailedReportData(req, whereSales, whereExpenses, [`${localDate} 00:00:00`, `${localDate} 23:59:59`], 'daily');
         res.json({ success: true, data });
     } catch (err) {
         next(err);
@@ -641,7 +648,7 @@ const getWeeklyReport = async (req, res, next) => {
             ]
         };
         const whereExpenses = { expense_date: { [Op.between]: [startStr, endStr] } };
-        const data = await getDetailedReportData(whereSales, whereExpenses, [`${startStr} 00:00:00`, `${endStr} 23:59:59`], 'weekly');
+        const data = await getDetailedReportData(req, whereSales, whereExpenses, [`${startStr} 00:00:00`, `${endStr} 23:59:59`], 'weekly');
         res.json({ success: true, data });
     } catch (err) {
         next(err);
@@ -662,7 +669,7 @@ const getReportByMonth = async (req, res, next) => {
             ]
         };
         const whereExpenses = { expense_date: { [Op.between]: [startStr, endStr] } };
-        const data = await getDetailedReportData(whereSales, whereExpenses, [`${startStr} 00:00:00`, `${endStr} 23:59:59`], 'monthly');
+        const data = await getDetailedReportData(req, whereSales, whereExpenses, [`${startStr} 00:00:00`, `${endStr} 23:59:59`], 'monthly');
         res.json({ success: true, data });
     } catch (err) {
         next(err);
@@ -685,7 +692,7 @@ const getCustomReport = async (req, res, next) => {
             created_at: { [Op.gte]: `${startStr} 00:00:00`, [Op.lte]: `${endStr} 23:59:59` }
         };
         const whereExpenses = { expense_date: { [Op.gte]: startStr, [Op.lte]: endStr } };
-        const data = await getDetailedReportData(whereSales, whereExpenses, [`${startStr} 00:00:00`, `${endStr} 23:59:59`], 'custom');
+        const data = await getDetailedReportData(req, whereSales, whereExpenses, [`${startStr} 00:00:00`, `${endStr} 23:59:59`], 'custom');
         res.json({ success: true, data });
     } catch (err) {
         next(err);

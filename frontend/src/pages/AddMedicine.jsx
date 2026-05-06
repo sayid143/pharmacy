@@ -5,11 +5,20 @@ import { useForm } from 'react-hook-form';
 import { Save, ArrowLeft, Upload, X, Loader2 } from 'lucide-react';
 import api from '../services/api';
 import toast from 'react-hot-toast';
+import { useAuth } from '../context/AuthContext';
 
 export default function AddMedicine() {
     const { id } = useParams();
     const navigate = useNavigate();
+    const { isPharmacist, loading } = useAuth();
     const isEdit = !!id;
+
+    useEffect(() => {
+        if (!loading && !isPharmacist) {
+            toast.error('Unauthorized access');
+            navigate('/dashboard');
+        }
+    }, [isPharmacist, loading, navigate]);
 
     const [categories, setCategories] = useState([]);
     const [suppliers, setSuppliers] = useState([]);
