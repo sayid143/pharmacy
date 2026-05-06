@@ -35,17 +35,17 @@ export default function Expenses() {
         'Utilities', 'Rent', 'Salaries', 'Supplies', 'Maintenance', 'Marketing', 'Other'
     ];
 
+    const [todayStr, setTodayStr] = useState(format(new Date(), 'yyyy-MM-dd'));
+
     const loadData = async () => {
         setLoading(true);
         try {
-            const [expensesRes, summaryRes, reportsRes] = await Promise.all([
+            const [expensesRes, summaryRes] = await Promise.all([
                 api.get('/expenses'),
-                api.get('/expenses/summary'),
-                api.get('/reports/daily')
+                api.get('/expenses/summary')
             ]);
             setExpenses(expensesRes.data.data || []);
             setSummary(summaryRes.data.data || {});
-            setReports(reportsRes.data.data || {});
         } catch (error) {
             toast.error('Failed to load expenses');
         } finally {
@@ -53,7 +53,50 @@ export default function Expenses() {
         }
     };
 
-    useEffect(() => { loadData(); }, []);
+    const fetchFilteredReport = async () => {
+        try {
+            const now = new Date();
+            let start, end;
+            if (dateFilter === 'today') {
+                start = end = format(now, 'yyyy-MM-dd');
+            } else if (dateFilter === 'week') {
+                const s = new Date(now);
+                s.setDate(now.getDate() - now.getDay());
+                const e = new Date(s);
+                e.setDate(s.getDate() + 6);
+                start = format(s, 'yyyy-MM-dd');
+                end = format(e, 'yyyy-MM-dd');
+            } else if (dateFilter === 'month') {
+                const s = new Date(now.getFullYear(), now.getMonth(), 1);
+                const e = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+                start = format(s, 'yyyy-MM-dd');
+                end = format(e, 'yyyy-MM-dd');
+            } else {
+                start = '2000-01-01';
+                end = '2099-12-31';
+            }
+            const res = await api.get(`/reports/custom?start=${start}&end=${end}`);
+            setReports(res.data.data || {});
+        } catch (error) {
+            console.error('Failed to load report summary for expenses', error);
+        }
+    };
+
+    useEffect(() => { 
+        loadData(); 
+    }, []);
+
+    useEffect(() => {
+        fetchFilteredReport();
+    }, [dateFilter, todayStr]);
+
+    useEffect(() => {
+        const interval = setInterval(() => {
+            const current = format(new Date(), 'yyyy-MM-dd');
+            if (current !== todayStr) setTodayStr(current);
+        }, 30000);
+        return () => clearInterval(interval);
+    }, [todayStr]);
 
     const handleSearch = (e) => setSearch(e.target.value);
 
@@ -61,16 +104,21 @@ export default function Expenses() {
         if (!dateString || filterType === 'all') return true;
         const expDateStr = dateString.split('T')[0];
         const now = new Date();
-        const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+        const todayStrLocal = format(now, 'yyyy-MM-dd');
         
         if (filterType === 'today') {
-            return expDateStr === todayStr;
+            return expDateStr === todayStrLocal;
         }
         
         const d = new Date(dateString);
         if (filterType === 'week') {
-            const diff = now - d;
-            return diff <= 7 * 24 * 60 * 60 * 1000;
+            const start = new Date(now);
+            start.setDate(now.getDate() - now.getDay());
+            start.setHours(0,0,0,0);
+            const end = new Date(start);
+            end.setDate(start.getDate() + 6);
+            end.setHours(23,59,59,999);
+            return d >= start && d <= end;
         }
         if (filterType === 'month') {
             return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
@@ -85,17 +133,14 @@ export default function Expenses() {
         filterByDate(ex.expense_date, dateFilter)
     );
 
-    // Strictly isolated daily calculations for Row 2 cards
-    const now = new Date();
-    const strictTodayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
-    const strictTodayExpenses = expenses.filter(ex => {
-        if (!ex.expense_date) return false;
-        return ex.expense_date.split('T')[0] === strictTodayStr;
-    });
+    // Dynamic calculations based on current view
+    const dynamicExpenseTotal = filteredExpenses.reduce((sum, item) => sum + Number(item.amount || 0), 0);
+    const dynamicExpenseCount = filteredExpenses.length;
+    const dynamicCategoriesCount = new Set(filteredExpenses.map(e => e.category)).size;
 
-    const dynamicExpenseTotal = strictTodayExpenses.reduce((sum, item) => sum + Number(item.amount || 0), 0);
-    const dynamicExpenseCount = strictTodayExpenses.length;
-    const dynamicCategoriesCount = new Set(strictTodayExpenses.map(e => e.category)).size;
+    const statsLabel = dateFilter === 'today' ? "Today's" : 
+                       dateFilter === 'week' ? "Weekly" : 
+                       dateFilter === 'month' ? "Monthly" : "Overall";
 
     const openModal = (expense = null) => {
         if (expense) {
@@ -177,8 +222,8 @@ export default function Expenses() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="card p-4 flex justify-between items-center border-l-4 border-l-emerald-500 shadow-sm rounded-xl bg-white hover:shadow-md transition-shadow">
                     <div>
-                        <p className="text-[11px] text-gray-500 font-bold uppercase tracking-wider">Today's Income</p>
-                        <h3 className="text-xl font-black text-gray-900 mt-1">${Number(reports?.summary?.actual_collected || reports?.summary?.total_revenue || 0).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</h3>
+                        <p className="text-[11px] text-gray-500 font-bold uppercase tracking-wider">{statsLabel} Income</p>
+                        <h3 className="text-xl font-black text-gray-900 mt-1">${Number(reports?.summary?.actual_collected || 0).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</h3>
                     </div>
                     <div className="w-10 h-10 bg-emerald-50 rounded-lg flex items-center justify-center text-emerald-500">
                         <DollarSign size={20} />
@@ -187,8 +232,8 @@ export default function Expenses() {
 
                 <div className="card p-4 flex justify-between items-center border-l-4 border-l-rose-500 shadow-sm rounded-xl bg-white hover:shadow-md transition-shadow">
                     <div>
-                        <p className="text-[11px] text-gray-500 font-bold uppercase tracking-wider">Today's Expenses</p>
-                        <h3 className="text-xl font-black text-gray-900 mt-1">${Number(summary.today_total || 0).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</h3>
+                        <p className="text-[11px] text-gray-500 font-bold uppercase tracking-wider">{statsLabel} Expenses</p>
+                        <h3 className="text-xl font-black text-gray-900 mt-1">${Number(dynamicExpenseTotal || 0).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</h3>
                     </div>
                     <div className="w-10 h-10 bg-rose-50 rounded-lg flex items-center justify-center text-rose-500">
                         <div className="w-5 h-5 bg-rose-500 rounded-full flex items-center justify-center text-white text-base font-bold leading-none pb-0.5">-</div>
@@ -197,7 +242,7 @@ export default function Expenses() {
 
                 <div className="card p-4 flex justify-between items-center border-l-4 border-l-purple-500 shadow-sm rounded-xl bg-white hover:shadow-md transition-shadow">
                     <div>
-                        <p className="text-[11px] text-gray-500 font-bold uppercase tracking-wider">Today's Sales</p>
+                        <p className="text-[11px] text-gray-500 font-bold uppercase tracking-wider">{statsLabel} Sales</p>
                         <h3 className="text-xl font-black text-gray-900 mt-1">${Number(reports?.summary?.total_revenue || 0).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</h3>
                     </div>
                     <div className="w-10 h-10 bg-purple-50 rounded-lg flex items-center justify-center text-purple-500">
@@ -210,7 +255,7 @@ export default function Expenses() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="card p-4 flex justify-between items-center border-l-4 border-l-rose-500 shadow-sm rounded-xl bg-white hover:shadow-md transition-shadow">
                     <div>
-                        <p className="text-[11px] text-gray-500 font-bold uppercase tracking-wider">Total Expenses</p>
+                        <p className="text-[11px] text-gray-500 font-bold uppercase tracking-wider">Filtered Expenses</p>
                         <h3 className="text-xl font-black text-gray-900 mt-1">${Number(dynamicExpenseTotal || 0).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</h3>
                     </div>
                     <div className="w-10 h-10 bg-rose-50 rounded-lg flex items-center justify-center text-rose-500">

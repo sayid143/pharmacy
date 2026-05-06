@@ -140,9 +140,21 @@ export default function Reports() {
         { id: 'actions', label: 'Actions' },
     ];
 
+    const [todayStr, setTodayStr] = useState(format(new Date(), 'yyyy-MM-dd'));
+
     useEffect(() => {
         setCurrentPage(1);
     }, [data]);
+
+    useEffect(() => {
+        const interval = setInterval(() => {
+            const current = format(new Date(), 'yyyy-MM-dd');
+            if (current !== todayStr) {
+                setTodayStr(current);
+            }
+        }, 30000); // Check every 30 seconds for day transition
+        return () => clearInterval(interval);
+    }, [todayStr]);
 
     const fetchReports = async () => {
         if (data) setRefreshing(true);
@@ -160,39 +172,31 @@ export default function Reports() {
             };
 
             if (filter === 'today') {
-                const start = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
-                const end = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
-                params.start = start.toISOString();
-                params.end = end.toISOString();
+                const dateStr = format(now, 'yyyy-MM-dd');
+                params.start = dateStr;
+                params.end = dateStr;
             } else if (filter === 'week') {
                 const start = new Date(now);
                 start.setDate(now.getDate() - now.getDay());
-                start.setHours(0, 0, 0, 0);
                 const end = new Date(start);
                 end.setDate(start.getDate() + 6);
-                end.setHours(23, 59, 59, 999);
-                params.start = start.toISOString();
-                params.end = end.toISOString();
+                params.start = format(start, 'yyyy-MM-dd');
+                params.end = format(end, 'yyyy-MM-dd');
             } else if (filter === 'month') {
                 const d = selectedMonthDate ? parseDateLocal(selectedMonthDate) : now;
                 if (isReportsFullMonth) {
-                    const start = new Date(d.getFullYear(), d.getMonth(), 1, 0, 0, 0, 0);
-                    const end = new Date(d.getFullYear(), d.getMonth() + 1, 0, 23, 59, 59, 999);
-                    params.start = start.toISOString();
-                    params.end = end.toISOString();
+                    const start = new Date(d.getFullYear(), d.getMonth(), 1);
+                    const end = new Date(d.getFullYear(), d.getMonth() + 1, 0);
+                    params.start = format(start, 'yyyy-MM-dd');
+                    params.end = format(end, 'yyyy-MM-dd');
                 } else {
-                    const start = new Date(d.getFullYear(), d.getMonth(), d.getDate(), 0, 0, 0, 0);
-                    const end = new Date(d.getFullYear(), d.getMonth(), d.getDate(), 23, 59, 59, 999);
-                    params.start = start.toISOString();
-                    params.end = end.toISOString();
+                    const dateStr = format(d, 'yyyy-MM-dd');
+                    params.start = dateStr;
+                    params.end = dateStr;
                 }
             } else if (filter === 'custom' && dateRange.start && dateRange.end) {
-                const dStart = parseDateLocal(dateRange.start);
-                dStart.setHours(0, 0, 0, 0);
-                const dEnd = parseDateLocal(dateRange.end);
-                dEnd.setHours(23, 59, 59, 999);
-                params.start = dStart.toISOString();
-                params.end = dEnd.toISOString();
+                params.start = dateRange.start;
+                params.end = dateRange.end;
             }
 
             console.log(`[Reports] Fetching from ${endpoint}`, params);
@@ -209,7 +213,7 @@ export default function Reports() {
 
     useEffect(() => {
         fetchReports();
-    }, [filter, dateRange, selectedMonthDate, isReportsFullMonth]);
+    }, [filter, dateRange, selectedMonthDate, isReportsFullMonth, todayStr]);
 
     const openDetail = async (tx) => {
         setModalOpen(true);
@@ -1031,9 +1035,9 @@ export default function Reports() {
                                             })}
 
                                             {allTransactions.length > 0 && (
-                                                <div className="bg-gradient-to-r from-blue-600 to-blue-700 rounded-xl p-5 text-white shadow-lg shadow-blue-200">
+                                                <div className="bg-gradient-to-r from-blue-600 to-emerald-500 rounded-xl p-5 text-white shadow-lg shadow-blue-200">
                                                     <div className="flex justify-between items-center">
-                                                        <span className="text-[11px] font-black uppercase tracking-[0.2em] opacity-80">Period Total Collection</span>
+                                                        <span className="text-[11px] font-black uppercase tracking-[0.2em] opacity-80">Total:</span>
                                                         <span className="text-2xl font-black tabular-nums">{formatCurrency(transactionsTotal)}</span>
                                                     </div>
                                                 </div>

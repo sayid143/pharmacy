@@ -509,7 +509,7 @@ const getDetailedReportData = async (whereSales, whereExpenses, replacements, ty
 
         const recentPaymentsRaw = await db.Payment.findAll({
             where: {
-                created_at: { [Op.between]: [replacements[0], replacements[1] + ' 23:59:59'] }
+                created_at: { [Op.between]: [replacements[0], replacements[1]] }
             },
             include: [{ model: db.Customer, as: 'customer' }],
             order: [['created_at', 'DESC']]
@@ -663,16 +663,21 @@ const getReportByMonth = async (req, res, next) => {
 
 const getCustomReport = async (req, res, next) => {
     try {
-        const { start, end } = req.query;
+        let { start, end } = req.query;
         if (!start || !end) {
             return res.status(400).json({ success: false, message: 'Start and end dates are required.' });
         }
+
+        // If start/end are ISO strings (contain 'T'), extract the date part (YYYY-MM-DD)
+        const startStr = start.includes('T') ? start.split('T')[0] : start;
+        const endStr = end.includes('T') ? end.split('T')[0] : end;
+
         const whereSales = { 
             status: 'completed',
-            created_at: { [Op.gte]: start, [Op.lte]: end }
+            created_at: { [Op.gte]: `${startStr} 00:00:00`, [Op.lte]: `${endStr} 23:59:59` }
         };
-        const whereExpenses = { expense_date: { [Op.gte]: start, [Op.lte]: end } };
-        const data = await getDetailedReportData(whereSales, whereExpenses, [`${start} 00:00:00`, `${end} 23:59:59`], 'custom');
+        const whereExpenses = { expense_date: { [Op.gte]: startStr, [Op.lte]: endStr } };
+        const data = await getDetailedReportData(whereSales, whereExpenses, [`${startStr} 00:00:00`, `${endStr} 23:59:59`], 'custom');
         res.json({ success: true, data });
     } catch (err) {
         next(err);
