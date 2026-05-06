@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import {
     Users, Shield, Clock, Search, Edit2, Key, Loader2, Plus,
-    MoreVertical, CheckCircle2, XCircle, Trash2, Mail, Phone, Calendar, X, AlertTriangle
+    MoreVertical, CheckCircle2, XCircle, Trash2, Mail, Phone, Calendar, X, AlertTriangle, Building
 } from 'lucide-react';
 import api from '../services/api';
 import toast from 'react-hot-toast';
@@ -10,6 +10,7 @@ import { format } from 'date-fns';
 export default function UsersList() {
     const [users, setUsers] = useState([]);
     const [roles, setRoles] = useState([]);
+    const [branches, setBranches] = useState([]);
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState('');
     const [filterRole, setFilterRole] = useState('');
@@ -24,7 +25,7 @@ export default function UsersList() {
 
     // Form Data
     const [formData, setFormData] = useState({
-        id: '', name: '', email: '', phone: '', role_id: '', password: '', is_active: true
+        id: '', name: '', email: '', phone: '', role_id: '', branch_id: '', password: '', is_active: true
     });
 
     const [passwordData, setPasswordData] = useState({ id: '', newPassword: '', confirmPassword: '' });
@@ -32,12 +33,14 @@ export default function UsersList() {
     const loadData = async () => {
         setLoading(true);
         try {
-            const [uRes, rRes] = await Promise.all([
+            const [uRes, rRes, bRes] = await Promise.all([
                 api.get('/users?limit=1000'),
-                api.get('/auth/roles').catch(() => api.get('/users/roles')) // Fallback in case route differs
+                api.get('/auth/roles').catch(() => api.get('/users/roles')),
+                api.get('/branches')
             ]);
             setUsers(uRes.data.data || []);
             setRoles(rRes.data.data || []);
+            setBranches(bRes.data.data || []);
         } catch (err) {
             toast.error('Failed to load users data');
         } finally {
@@ -56,7 +59,7 @@ export default function UsersList() {
 
     const openAddModal = () => {
         setEditMode(false);
-        setFormData({ id: '', name: '', email: '', phone: '', role_id: '', password: '', is_active: true });
+        setFormData({ id: '', name: '', email: '', phone: '', role_id: '', branch_id: '', password: '', is_active: true });
         setShowUserModal(true);
     };
 
@@ -68,6 +71,7 @@ export default function UsersList() {
             email: user.email || '',
             phone: user.phone || '',
             role_id: user.role_id || '',
+            branch_id: user.branch_id || '',
             is_active: user.is_active !== undefined ? user.is_active : true,
             password: ''
         });
@@ -88,6 +92,7 @@ export default function UsersList() {
                 email: formData.email,
                 phone: formData.phone,
                 role_id: formData.role_id,
+                branch_id: formData.branch_id,
                 is_active: formData.is_active
             };
 
@@ -199,6 +204,7 @@ export default function UsersList() {
                                 <th className="px-4 py-3 whitespace-nowrap">User Details</th>
                                 <th className="px-4 py-3 whitespace-nowrap">Contact</th>
                                 <th className="px-4 py-3 whitespace-nowrap">Role</th>
+                                <th className="px-4 py-3 whitespace-nowrap">Branch</th>
                                 <th className="px-4 py-3 whitespace-nowrap">Status</th>
                                 <th className="px-4 py-3 whitespace-nowrap">Joined</th>
                                 <th className="px-4 py-3 text-right whitespace-nowrap">Actions</th>
@@ -237,6 +243,12 @@ export default function UsersList() {
                                         <span className={`px-2.5 py-1 text-xs font-bold uppercase tracking-wider rounded-md border ${getRoleBadge(user.role?.name || user.role_name)}`}>
                                             {user.role?.name || user.role_name || 'Staff'}
                                         </span>
+                                    </td>
+                                    <td className="px-4 py-2.5 whitespace-nowrap">
+                                        <div className="flex items-center gap-2 text-gray-700">
+                                            <Building size={14} className="text-blue-500 opacity-70" />
+                                            <span className="font-medium">{user.branch?.name || 'Unassigned'}</span>
+                                        </div>
                                     </td>
                                     <td className="px-4 py-2.5 whitespace-nowrap">
                                         {user.is_active ? (
@@ -378,6 +390,22 @@ export default function UsersList() {
                                     <p className="text-xs text-gray-500 mt-1">Minimum 6 characters. User can change this later.</p>
                                 </div>
                             )}
+
+                            <div className="relative">
+                                <select
+                                    required
+                                    value={formData.branch_id}
+                                    onChange={e => setFormData({ ...formData, branch_id: e.target.value })}
+                                    className="peer w-full px-4 pt-6 pb-2 rounded-xl border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all outline-none bg-white appearance-none"
+                                >
+                                    <option value="" disabled>Select a branch...</option>
+                                    {branches.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
+                                </select>
+                                <label className="absolute left-4 top-2 text-xs text-gray-500 transition-all peer-placeholder-shown:text-base peer-placeholder-shown:top-4 peer-focus:top-2 peer-focus:text-xs peer-focus:text-blue-600 pointer-events-none">
+                                    Assigned Branch <span className="text-red-500">*</span>
+                                </label>
+                                <p className="text-xs text-gray-500 mt-1">User will only see data belonging to this branch.</p>
+                            </div>
 
                             {editMode && (
                                 <div className="flex items-center gap-3 pt-4 border-t border-gray-100">

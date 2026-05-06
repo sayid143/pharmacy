@@ -1,10 +1,16 @@
 import db from '../config/db.js';
 import logger from '../middleware/logger.js';
+import { getBranchQueryFilter, getBranchWhereFilter } from '../utils/branchHelper.js';
 
 const { QueryTypes, Op } = db.Sequelize;
 
 const getDashboard = async (req, res, next) => {
     try {
+        const branchFilter = getBranchQueryFilter(req, 's');
+        const medBranchFilter = getBranchQueryFilter(req, ''); // for medicines table
+        const debtBranchFilter = getBranchQueryFilter(req, ''); // for debts table
+        const expBranchFilter = getBranchQueryFilter(req, ''); // for expenses table
+
         const startOfToday = new Date();
         startOfToday.setHours(0, 0, 0, 0);
         const endOfToday = new Date();
@@ -23,7 +29,7 @@ const getDashboard = async (req, res, next) => {
                   COALESCE(SUM(si.profit), 0) as profit
            FROM sales s
            LEFT JOIN (SELECT sale_id, SUM((selling_price - purchase_price) * quantity) as profit FROM sale_items GROUP BY sale_id) si ON s.id = si.sale_id
-           WHERE s.created_at >= ? AND s.created_at <= ? AND s.status = 'completed'`,
+           WHERE s.created_at >= ? AND s.created_at <= ? AND s.status = 'completed'${branchFilter}`,
                 { replacements: [tzStart, tzEnd], type: QueryTypes.SELECT }
             );
             todaySales = results;
@@ -36,7 +42,7 @@ const getDashboard = async (req, res, next) => {
         try {
             const [results] = await db.sequelize.query(
                 `SELECT COALESCE(SUM(total_amount), 0) as revenue, COUNT(*) as count
-           FROM sales WHERE created_at >= ? AND status = 'completed'`,
+           FROM sales s WHERE created_at >= ? AND status = 'completed'${branchFilter}`,
                 { replacements: [tzMonthStart], type: QueryTypes.SELECT }
             );
             monthlySales = results;
@@ -56,31 +62,32 @@ const getDashboard = async (req, res, next) => {
         );
 
         const [debts] = await db.sequelize.query(
-            `SELECT COUNT(*) as count, COALESCE(SUM(balance), 0) as total FROM debts WHERE status IN ('pending', 'partial', 'overdue')`,
+            `SELECT COUNT(*) as count, COALESCE(SUM(balance), 0) as total FROM debts WHERE status IN ('pending', 'partial', 'overdue')${debtBranchFilter}`,
             { type: QueryTypes.SELECT }
         );
 
         const [todayDebts] = await db.sequelize.query(
-            `SELECT COALESCE(SUM(balance), 0) as total FROM debts WHERE created_at >= ? AND created_at <= ?`,
+            `SELECT COALESCE(SUM(balance), 0) as total FROM debts WHERE created_at >= ? AND created_at <= ?${debtBranchFilter}`,
             { replacements: [tzStart, tzEnd], type: QueryTypes.SELECT }
         );
 
-        const totalMedicines = await db.Medicine.count({ where: { is_active: true } });
-        const outOfStock = await db.Medicine.count({ where: { is_active: true, quantity: 0 } });
+        const totalMedicines = await db.Medicine.count({ where: { is_active: true, ...getBranchWhereFilter(req) } });
+        const outOfStock = await db.Medicine.count({ where: { is_active: true, quantity: 0, ...getBranchWhereFilter(req) } });
         const inStock = await db.Medicine.count({
             where: {
                 is_active: true,
-                quantity: { [db.Sequelize.Op.gt]: 0 }
+                quantity: { [db.Sequelize.Op.gt]: 0 },
+                ...getBranchWhereFilter(req)
             }
         });
-        const totalCustomers = await db.Customer.count({ where: { is_active: true } });
+        const totalCustomers = await db.Customer.count({ where: { is_active: true, ...getBranchWhereFilter(req) } });
 
         const topMedicines = await db.sequelize.query(
             `SELECT m.name, SUM(si.quantity) as total_qty, SUM(si.subtotal) as revenue
        FROM sale_items si
        JOIN medicines m ON si.medicine_id = m.id
        JOIN sales s ON si.sale_id = s.id
-       WHERE DATE(s.created_at) >= ? AND s.status = 'completed'
+       WHERE DATE(s.created_at) >= ? AND s.status = 'completed'${branchFilter}
        GROUP BY m.id, m.name
        ORDER BY total_qty DESC
        LIMIT 5`,
@@ -89,8 +96,8 @@ const getDashboard = async (req, res, next) => {
 
         const weeklyTrend = await db.sequelize.query(
             `SELECT DATE(created_at) as date, COALESCE(SUM(total_amount), 0) as revenue, COUNT(*) as transactions
-       FROM sales
-       WHERE created_at >= DATE_SUB(NOW(), INTERVAL 7 DAY) AND status = 'completed'
+       FROM sales s
+       WHERE created_at >= DATE_SUB(NOW(), INTERVAL 7 DAY) AND status = 'completed'${branchFilter}
        GROUP BY DATE(created_at)
        ORDER BY date ASC`,
             { type: QueryTypes.SELECT }
@@ -100,7 +107,7 @@ const getDashboard = async (req, res, next) => {
             `SELECT DATE_FORMAT(created_at, '%Y-%m') as month,
               COALESCE(SUM(total_amount), 0) as revenue,
               COUNT(*) as transactions
-       FROM sales WHERE created_at >= DATE_SUB(NOW(), INTERVAL 6 MONTH) AND status = 'completed'
+       FROM sales s WHERE created_at >= DATE_SUB(NOW(), INTERVAL 6 MONTH) AND status = 'completed'${branchFilter}
        GROUP BY DATE_FORMAT(created_at, '%Y-%m')
        ORDER BY month ASC`,
             { type: QueryTypes.SELECT }
@@ -110,6 +117,7 @@ const getDashboard = async (req, res, next) => {
             `SELECT s.id, s.invoice_number, s.total_amount, s.payment_method, s.payment_status,
                s.created_at, c.name as customer_name
         FROM sales s LEFT JOIN customers c ON s.customer_id = c.id
+        WHERE 1=1${branchFilter}
         ORDER BY s.created_at DESC LIMIT 5`,
             { type: QueryTypes.SELECT }
         );
@@ -117,9 +125,9 @@ const getDashboard = async (req, res, next) => {
         const stockAlerts = await db.sequelize.query(
             `SELECT id, name, quantity, min_stock_level, expiry_date,
                DATEDIFF(expiry_date, CURDATE()) as days_to_expiry
-        FROM medicines
+        FROM medicines m
         WHERE (quantity <= min_stock_level OR expiry_date <= DATE_ADD(CURDATE(), INTERVAL 30 DAY))
-          AND is_active = TRUE
+          AND is_active = TRUE${medBranchFilter}
         ORDER BY quantity ASC LIMIT 8`,
             { type: QueryTypes.SELECT }
         );

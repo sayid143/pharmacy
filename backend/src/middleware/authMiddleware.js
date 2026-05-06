@@ -1,6 +1,7 @@
 import { verifyToken } from '../config/jwt.js';
 import db from '../config/db.js';
 import logger from './logger.js';
+import { tenantContext } from './tenantMiddleware.js';
 
 const authenticate = async (req, res, next) => {
     try {
@@ -28,7 +29,23 @@ const authenticate = async (req, res, next) => {
             permissions: userData.role?.permissions
         };
 
-        next();
+        // Initialize Branch Context
+        const currentContext = tenantContext.getStore();
+        if (currentContext) {
+            const isAdmin = req.user.role_name === 'admin';
+            const branchId = isAdmin ? null : req.user.branch_id;
+            
+            tenantContext.run({
+                ...currentContext,
+                branchId,
+                isAdmin,
+                userId: req.user.id
+            }, () => {
+                next();
+            });
+        } else {
+            next();
+        }
     } catch (err) {
         if (err.name === 'TokenExpiredError') {
             return res.status(401).json({ success: false, message: 'Authentication token has expired.' });

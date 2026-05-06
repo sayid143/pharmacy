@@ -7,11 +7,23 @@ const api = axios.create({
     timeout: 30000,
 });
 
-// Request interceptor - attach token
+// Request interceptor - attach token and tenant id
 api.interceptors.request.use(
     (config) => {
         const token = localStorage.getItem('token');
         if (token) config.headers.Authorization = `Bearer ${token}`;
+        
+        // Tenant identification from subdomain
+        const hostname = window.location.hostname;
+        const parts = hostname.split('.');
+        let tenantId = 'default';
+        
+        if (parts.length > 2 && parts[0] !== 'www') {
+            tenantId = parts[0];
+        }
+        
+        config.headers['X-Tenant-ID'] = tenantId;
+        
         return config;
     },
     (err) => Promise.reject(err)

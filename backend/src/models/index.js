@@ -1,5 +1,6 @@
 import { Sequelize, DataTypes } from 'sequelize';
 import logger from '../middleware/logger.js';
+import { tenantContext } from '../middleware/tenantMiddleware.js';
 import User from './user.js';
 import Role from './role.js';
 import Branch from './branch.js';
@@ -16,7 +17,8 @@ import Expense from './expense.js';
 import PurchaseOrder from './purchaseOrder.js';
 import PurchaseOrderItem from './purchaseOrderItem.js';
 
-const sequelize = new Sequelize(
+// Default static connection (fallback/migration)
+const staticSequelize = new Sequelize(
     process.env.DB_NAME || 'pharmacare',
     process.env.DB_USER || 'root',
     process.env.DB_PASSWORD || '',
@@ -25,12 +27,7 @@ const sequelize = new Sequelize(
         port: parseInt(process.env.DB_PORT) || 3306,
         dialect: 'mysql',
         logging: false,
-        pool: {
-            max: 20,
-            min: 0,
-            acquire: 30000,
-            idle: 10000
-        },
+        pool: { max: 20, min: 0, acquire: 30000, idle: 10000 },
         timezone: '+00:00',
         define: {
             timestamps: true,
@@ -40,39 +37,50 @@ const sequelize = new Sequelize(
     }
 );
 
-const db = {
-    sequelize,
+const staticDb = {
+    sequelize: staticSequelize,
     Sequelize,
-    User: User(sequelize, DataTypes),
-    Role: Role(sequelize, DataTypes),
-    Branch: Branch(sequelize, DataTypes),
-    ActivityLog: ActivityLog(sequelize, DataTypes),
-    Category: Category(sequelize, DataTypes),
-    Supplier: Supplier(sequelize, DataTypes),
-    Medicine: Medicine(sequelize, DataTypes),
-    Customer: Customer(sequelize, DataTypes),
-    Sale: Sale(sequelize, DataTypes),
-    SaleItem: SaleItem(sequelize, DataTypes),
-    Debt: Debt(sequelize, DataTypes),
-    Payment: Payment(sequelize, DataTypes),
-    Expense: Expense(sequelize, DataTypes),
-    PurchaseOrder: PurchaseOrder(sequelize, DataTypes),
-    PurchaseOrderItem: PurchaseOrderItem(sequelize, DataTypes)
+    User: User(staticSequelize, DataTypes),
+    Role: Role(staticSequelize, DataTypes),
+    Branch: Branch(staticSequelize, DataTypes),
+    ActivityLog: ActivityLog(staticSequelize, DataTypes),
+    Category: Category(staticSequelize, DataTypes),
+    Supplier: Supplier(staticSequelize, DataTypes),
+    Medicine: Medicine(staticSequelize, DataTypes),
+    Customer: Customer(staticSequelize, DataTypes),
+    Sale: Sale(staticSequelize, DataTypes),
+    SaleItem: SaleItem(staticSequelize, DataTypes),
+    Debt: Debt(staticSequelize, DataTypes),
+    Payment: Payment(staticSequelize, DataTypes),
+    Expense: Expense(staticSequelize, DataTypes),
+    PurchaseOrder: PurchaseOrder(staticSequelize, DataTypes),
+    PurchaseOrderItem: PurchaseOrderItem(staticSequelize, DataTypes)
 };
 
-Object.keys(db).forEach(modelName => {
-    if (db[modelName]?.associate) {
-        db[modelName].associate(db);
+Object.keys(staticDb).forEach(modelName => {
+    if (staticDb[modelName]?.associate) {
+        staticDb[modelName].associate(staticDb);
+    }
+});
+
+// Proxy to dynamically switch db based on context
+const db = new Proxy(staticDb, {
+    get(target, prop) {
+        const contextDb = tenantContext.getStore();
+        if (contextDb) {
+            return contextDb[prop];
+        }
+        return target[prop];
     }
 });
 
 db.testConnection = async () => {
     try {
-        await sequelize.authenticate();
-        logger.info('MySQL database connected successfully');
+        await staticSequelize.authenticate();
+        logger.info('Static MySQL database connected successfully');
         return true;
     } catch (err) {
-        logger.error(`Database connection failed: ${err.message}`);
+        logger.error(`Static database connection failed: ${err.message}`);
         return false;
     }
 };
@@ -80,11 +88,11 @@ db.testConnection = async () => {
 db.syncModels = async (options = {}) => {
     try {
         const shouldAlter = options.alter || process.env.DB_ALTER === 'true';
-        await sequelize.sync({ alter: shouldAlter, ...options });
+        await staticSequelize.sync({ alter: shouldAlter, ...options });
 
-        const roleCount = await db.Role.count();
+        const roleCount = await staticDb.Role.count();
         if (roleCount === 0) {
-            await db.Role.bulkCreate([
+            await staticDb.Role.bulkCreate([
                 { name: 'admin', description: 'System Administrator', permissions: { all: true } },
                 { name: 'pharmacist', description: 'Licensed Pharmacist', permissions: { medicines: true, sales: true, reports: true, customers: true } },
                 { name: 'cashier', description: 'Sales Cashier', permissions: { sales: true, customers: true } }

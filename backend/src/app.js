@@ -9,6 +9,8 @@ import { fileURLToPath } from 'url';
 
 import logger from './middleware/logger.js';
 import { errorHandler, notFound } from './middleware/errorHandler.js';
+import { tenantMiddleware } from './middleware/tenantMiddleware.js';
+import centralDb from './config/centralDb.js';
 
 import authRoutes from './routes/authRoutes.js';
 import medicineRoutes from './routes/medicineRoutes.js';
@@ -48,6 +50,12 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // Static uploads folder
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
+// Initialize Central Database
+centralDb.init().catch(err => logger.error(`Central DB init failed: ${err.message}`));
+
+// Tenant Middleware - Apply globally for all /api routes
+app.use('/api', tenantMiddleware);
 
 // Request logging
 app.use((req, res, next) => {

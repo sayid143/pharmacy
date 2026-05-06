@@ -14,6 +14,7 @@ import Users from './pages/Users';
 import Customers from './pages/Customers';
 import Suppliers from './pages/Suppliers';
 import Transactions from './pages/Transactions';
+import Branches from './pages/Branches';
 
 const ProtectedRoute = ({ children, allowedRoles }) => {
     const { user, loading } = useAuth();
@@ -49,6 +50,7 @@ const AppRoutes = () => {
                 <Route path="transactions" element={<Transactions />} />
                 <Route path="suppliers" element={<ProtectedRoute allowedRoles={['admin', 'pharmacist']}><Suppliers /></ProtectedRoute>} />
                 <Route path="users" element={<ProtectedRoute allowedRoles={['admin']}><Users /></ProtectedRoute>} />
+                <Route path="branches" element={<ProtectedRoute allowedRoles={['admin']}><Branches /></ProtectedRoute>} />
             </Route>
             <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

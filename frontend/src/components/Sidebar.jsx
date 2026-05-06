@@ -4,20 +4,17 @@ import { useAuth } from '../context/AuthContext';
 import {
     LayoutDashboard, Pill, ShoppingCart, BarChart3, DollarSign, CreditCard,
     LogOut, X, Activity, ChevronRight, Users, Package, Settings, ClipboardList,
-    Menu
+    Menu, Building
 } from 'lucide-react';
 
 const navItems = [
     { to: '/', label: 'Dashboard', icon: LayoutDashboard, exact: true },
     { to: '/medicines', label: 'Medicine Management', icon: Pill },
     { to: '/sales', label: 'Sales (POS)', icon: ShoppingCart },
-    // { to: '/transactions', label: 'Transactions', icon: ClipboardList },
-    // { to: '/debts', label: 'Debt Management', icon: CreditCard },
     { to: '/expenses', label: 'Expense Tracking', icon: DollarSign },
     { to: '/reports', label: 'Analytics & Reports', icon: BarChart3 },
-    // { to: '/suppliers', label: 'Suppliers', icon: Package },
     { to: '/users', label: 'Users', icon: Users, adminOnly: true },
-
+    { to: '/branches', label: 'Branches', icon: Building, adminOnly: true },
 ];
 
 export default function Sidebar({ mobileOpen, onClose, isCollapsed, setIsCollapsed }) {
