@@ -10,9 +10,9 @@ const getCustomers = async (req, res, next) => {
 
         if (search) {
             where[Op.or] = [
-                { name: { [Op.like]: `%${search}%` } },
-                { phone: { [Op.like]: `%${search}%` } },
-                { email: { [Op.like]: `%${search}%` } }
+                { name: { [Op.iLike]: `%${search}%` } },
+                { phone: { [Op.iLike]: `%${search}%` } },
+                { email: { [Op.iLike]: `%${search}%` } }
             ];
         }
 

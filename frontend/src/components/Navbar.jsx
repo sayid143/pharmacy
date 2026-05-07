@@ -58,7 +58,7 @@ export default function Navbar({ onMenuClick }) {
 
     return (
         <>
-            <header className="bg-white border-b border-gray-100 px-4 md:px-6 py-3 flex items-center gap-4 sticky top-0 z-30 print:hidden">
+            <header className="bg-white border-b border-gray-300 px-20 md:px-6 py-3 flex items-center gap-4 sticky top-0 z-30 print:hidden">
                 {/* Mobile menu button */}
                 <button onClick={onMenuClick} className="lg:hidden text-gray-500 hover:text-gray-700">
                     <Menu size={22} />
@@ -66,16 +66,20 @@ export default function Navbar({ onMenuClick }) {
 
                 {/* Branch Info - Center */}
                 <div className="flex-1 hidden md:flex justify-center">
-                    {user?.branch && (
+                    {(user?.branch || user?.branch_name) && (
                         <div className="flex items-center gap-4 bg-gray-50/50 px-4 py-1.5 rounded-2xl border border-gray-100 shadow-sm">
                             <div className="flex items-center gap-2 text-blue-600">
                                 <Building size={16} className="opacity-70" />
-                                <span className="text-xs font-bold uppercase tracking-wider">{user.branch.name}</span>
+                                <span className="text-xs font-bold uppercase tracking-wider">
+                                    {user.branch?.name || user.branch_name}
+                                </span>
                             </div>
                             <div className="w-px h-4 bg-gray-200" />
                             <div className="flex items-center gap-2 text-gray-500">
                                 <MapPin size={16} className="opacity-70" />
-                                <span className="text-xs font-medium">{user.branch.address || 'Location N/A'}</span>
+                                <span className="text-xs font-medium">
+                                    {user.branch?.address || user.location || 'Location N/A'}
+                                </span>
                             </div>
                         </div>
                     )}

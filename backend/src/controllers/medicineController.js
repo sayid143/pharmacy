@@ -14,9 +14,9 @@ const getMedicines = async (req, res, next) => {
 
         if (search) {
             where[Op.or] = [
-                { name: { [Op.like]: `%${search}%` } },
-                { generic_name: { [Op.like]: `%${search}%` } },
-                { barcode: { [Op.like]: `%${search}%` } }
+                { name: { [Op.iLike]: `%${search}%` } },
+                { generic_name: { [Op.iLike]: `%${search}%` } },
+                { barcode: { [Op.iLike]: `%${search}%` } }
             ];
         }
         if (category_id) where.category_id = category_id;

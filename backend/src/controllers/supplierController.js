@@ -14,9 +14,9 @@ const getSuppliers = async (req, res, next) => {
 
         if (search) {
             where[Op.or] = [
-                { name: { [Op.like]: `%${search}%` } },
-                { contact_person: { [Op.like]: `%${search}%` } },
-                { email: { [Op.like]: `%${search}%` } }
+                { name: { [Op.iLike]: `%${search}%` } },
+                { contact_person: { [Op.iLike]: `%${search}%` } },
+                { email: { [Op.iLike]: `%${search}%` } }
             ];
         }
 

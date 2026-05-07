@@ -16,9 +16,9 @@ const getExpenses = async (req, res, next) => {
         if (req.query.search) {
             const searchTerm = `%${req.query.search}%`;
             where[Op.or] = [
-                { title: { [Op.like]: searchTerm } },
-                { description: { [Op.like]: searchTerm } },
-                { category: { [Op.like]: searchTerm } }
+                { title: { [Op.iLike]: searchTerm } },
+                { description: { [Op.iLike]: searchTerm } },
+                { category: { [Op.iLike]: searchTerm } }
             ];
         }
 
@@ -118,15 +118,15 @@ const getExpenseSummary = async (req, res, next) => {
     try {
         const { year = new Date().getFullYear() } = req.query;
 
-        // Note: Using raw SQL for complex grouping if needed, but Sequelize can do most
+        // Using EXTRACT for PostgreSQL compatibility
         const monthly = await db.Expense.findAll({
             attributes: [
-                [db.sequelize.fn('MONTH', db.sequelize.col('expense_date')), 'month'],
+                [db.sequelize.fn('EXTRACT', db.sequelize.literal('MONTH FROM "expense_date"')), 'month'],
                 [db.sequelize.fn('SUM', db.sequelize.col('amount')), 'total']
             ],
-            where: db.sequelize.where(db.sequelize.fn('YEAR', db.sequelize.col('expense_date')), year),
-            group: [db.sequelize.fn('MONTH', db.sequelize.col('expense_date'))],
-            order: [[db.sequelize.fn('MONTH', db.sequelize.col('expense_date')), 'ASC']]
+            where: db.sequelize.where(db.sequelize.fn('EXTRACT', db.sequelize.literal('YEAR FROM "expense_date"')), year),
+            group: [db.sequelize.fn('EXTRACT', db.sequelize.literal('MONTH FROM "expense_date"'))],
+            order: [[db.sequelize.fn('EXTRACT', db.sequelize.literal('MONTH FROM "expense_date"')), 'ASC']]
         });
 
         const byCategory = await db.Expense.findAll({
@@ -135,13 +135,13 @@ const getExpenseSummary = async (req, res, next) => {
                 [db.sequelize.fn('SUM', db.sequelize.col('amount')), 'total'],
                 [db.sequelize.fn('COUNT', db.sequelize.col('id')), 'count']
             ],
-            where: db.sequelize.where(db.sequelize.fn('YEAR', db.sequelize.col('expense_date')), year),
+            where: db.sequelize.where(db.sequelize.fn('EXTRACT', db.sequelize.literal('YEAR FROM "expense_date"')), year),
             group: ['category'],
             order: [[db.sequelize.fn('SUM', db.sequelize.col('amount')), 'DESC']]
         });
 
         const yearTotal = await db.Expense.sum('amount', {
-            where: db.sequelize.where(db.sequelize.fn('YEAR', db.sequelize.col('expense_date')), year)
+            where: db.sequelize.where(db.sequelize.fn('EXTRACT', db.sequelize.literal('YEAR FROM "expense_date"')), year)
         });
 
         const today = new Date();

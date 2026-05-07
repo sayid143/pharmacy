@@ -166,7 +166,7 @@ export default function UsersList() {
                     <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Users Management</h1>
                     <p className="text-gray-500 text-sm mt-1">Manage system administrators, pharmacists, and staff.</p>
                 </div>
-                <button onClick={openAddModal} className="btn-primary flex items-center gap-2 px-5 py-2.5 shadow-md hover:shadow-lg transition-all">
+                <button onClick={openAddModal} className="btn-primary flex items-center gap-2 px-5 py-2.5 shadow-md hover:shadow-lg transition-all cursor-pointer">
                     <Plus size={18} /> Add New User
                 </button>
             </div>
@@ -423,14 +423,14 @@ export default function UsersList() {
                                 <button
                                     type="button"
                                     onClick={() => setShowUserModal(false)}
-                                    className="flex-1 py-3 px-6 border border-gray-300 text-gray-700 font-medium rounded-xl hover:bg-gray-50 transition-colors"
+                                    className="flex-1 py-3 px-6 border border-gray-300 text-gray-700 font-medium rounded-xl hover:bg-gray-50 transition-colors cursor-pointer"
                                 >
                                     Cancel
                                 </button>
                                 <button
                                     type="submit"
                                     disabled={submitting}
-                                    className="flex-1 py-3 px-6 bg-gradient-to-r from-blue-600 to-blue-700 text-white font-bold rounded-xl hover:from-blue-700 hover:to-blue-800 transition-all shadow-lg disabled:opacity-60 flex items-center justify-center gap-2"
+                                    className="flex-1 py-3 px-6 bg-gradient-to-r from-blue-600 to-emerald-500  text-white font-bold rounded-xl transition-all shadow-lg disabled:opacity-60 flex items-center justify-center gap-2 cursor-pointer"
                                 >
                                     {submitting ? (
                                         <>

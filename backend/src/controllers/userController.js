@@ -10,8 +10,8 @@ const getUsers = async (req, res, next) => {
         const where = {};
         if (search) {
             where[Op.or] = [
-                { name: { [Op.like]: `%${search}%` } },
-                { email: { [Op.like]: `%${search}%` } }
+                { name: { [Op.iLike]: `%${search}%` } },
+                { email: { [Op.iLike]: `%${search}%` } }
             ];
         }
         if (role_id) where.role_id = role_id;

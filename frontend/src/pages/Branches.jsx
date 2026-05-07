@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import {
-    Building, MapPin, Phone, Mail, Plus, Edit2, Trash2, 
+    Building, MapPin, Phone, Mail, Plus, Edit2, Trash2,
     Loader2, Search, X, CheckCircle2, AlertTriangle, Globe
 } from 'lucide-react';
 import api from '../services/api';
@@ -33,7 +33,7 @@ export default function Branches() {
 
     useEffect(() => { loadBranches(); }, []);
 
-    const filteredBranches = branches.filter(b => 
+    const filteredBranches = branches.filter(b =>
         b.name?.toLowerCase().includes(search.toLowerCase()) ||
         b.address?.toLowerCase().includes(search.toLowerCase())
     );
@@ -90,7 +90,7 @@ export default function Branches() {
                     <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Branches Management</h1>
                     <p className="text-gray-500 text-sm mt-1">Manage your pharmacy locations and inventory distribution.</p>
                 </div>
-                <button onClick={openAddModal} className="btn-primary flex items-center gap-2 px-5 py-2.5 shadow-md hover:shadow-lg transition-all">
+                <button onClick={openAddModal} className="btn-primary flex items-center gap-2 px-5 py-2.5 shadow-md hover:shadow-lg transition-all cursor-pointer">
                     <Plus size={18} /> Add New Branch
                 </button>
             </div>
@@ -155,7 +155,7 @@ export default function Branches() {
                                 </div>
                             </div>
                         </div>
-                        
+
                         <div className="px-6 py-4 bg-gray-50/50 flex items-center justify-between">
                             <span className={`px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest rounded-full border ${branch.is_active ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-gray-100 text-gray-500 border-gray-200'}`}>
                                 {branch.is_active ? 'Active' : 'Inactive'}
@@ -240,10 +240,10 @@ export default function Branches() {
                             </div>
 
                             <div className="flex gap-4 pt-4">
-                                <button type="button" onClick={() => setShowModal(false)} className="flex-1 py-4 px-6 border border-gray-200 text-gray-600 font-bold rounded-2xl hover:bg-gray-50 transition-all">
+                                <button type="button" onClick={() => setShowModal(false)} className="flex-1 py-4 px-6 border border-gray-200 text-gray-600 font-bold rounded-2xl hover:bg-gray-50 transition-all cursor-pointer">
                                     Cancel
                                 </button>
-                                <button type="submit" disabled={submitting} className="flex-1 py-4 px-6 bg-gradient-to-r from-blue-600 to-blue-700 text-white font-black rounded-2xl hover:shadow-xl hover:shadow-blue-200 transition-all disabled:opacity-60 flex items-center justify-center gap-2">
+                                <button type="submit" disabled={submitting} className="flex-1 py-4 px-6 bg-gradient-to-r from-blue-600 to-emerald-500  text-white font-black rounded-2xl hover:shadow-xl hover:shadow-blue-200 transition-all disabled:opacity-60 flex items-center justify-center gap-2 cursor-pointer">
                                     {submitting ? <Loader2 className="animate-spin" size={20} /> : (editMode ? 'Save Changes' : 'Create Branch')}
                                 </button>
                             </div>

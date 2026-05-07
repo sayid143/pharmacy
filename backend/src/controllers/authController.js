@@ -100,7 +100,9 @@ const login = async (req, res, next) => {
                 user: {
                     ...userData,
                     role_name: userData.role?.name,
-                    permissions: userData.role?.permissions
+                    permissions: userData.role?.permissions,
+                    branch_name: userData.branch?.name || userData.branch_name,
+                    location: userData.branch?.address || userData.location
                 }
             }
         });

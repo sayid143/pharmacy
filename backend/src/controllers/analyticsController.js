@@ -57,7 +57,7 @@ const getDashboard = async (req, res, next) => {
         );
 
         const [expiringSoon] = await db.sequelize.query(
-            `SELECT COUNT(*) as count FROM medicines WHERE expiry_date <= DATE_ADD(CURDATE(), INTERVAL 30 DAY) AND expiry_date > CURDATE() AND is_active = TRUE${medBranchFilter}`,
+            `SELECT COUNT(*) as count FROM medicines WHERE expiry_date <= (CURRENT_DATE + INTERVAL '30 days') AND expiry_date > CURRENT_DATE AND is_active = TRUE${medBranchFilter}`,
             { type: QueryTypes.SELECT }
         );
 
@@ -87,7 +87,7 @@ const getDashboard = async (req, res, next) => {
        FROM sale_items si
        JOIN medicines m ON si.medicine_id = m.id
        JOIN sales s ON si.sale_id = s.id
-       WHERE DATE(s.created_at) >= ? AND s.status = 'completed'${branchFilter}
+       WHERE (s.created_at)::DATE >= ? AND s.status = 'completed'${branchFilter}
        GROUP BY m.id, m.name
        ORDER BY total_qty DESC
        LIMIT 5`,
@@ -95,20 +95,20 @@ const getDashboard = async (req, res, next) => {
         );
 
         const weeklyTrend = await db.sequelize.query(
-            `SELECT DATE(created_at) as date, COALESCE(SUM(total_amount), 0) as revenue, COUNT(*) as transactions
+            `SELECT (created_at)::DATE as date, COALESCE(SUM(total_amount), 0) as revenue, COUNT(*) as transactions
        FROM sales s
-       WHERE created_at >= DATE_SUB(NOW(), INTERVAL 7 DAY) AND status = 'completed'${branchFilter}
-       GROUP BY DATE(created_at)
+       WHERE created_at >= (NOW() - INTERVAL '7 days') AND status = 'completed'${branchFilter}
+       GROUP BY (created_at)::DATE
        ORDER BY date ASC`,
             { type: QueryTypes.SELECT }
         );
 
         const monthlyTrend = await db.sequelize.query(
-            `SELECT DATE_FORMAT(created_at, '%Y-%m') as month,
+            `SELECT TO_CHAR(created_at, 'YYYY-MM') as month,
               COALESCE(SUM(total_amount), 0) as revenue,
               COUNT(*) as transactions
-       FROM sales s WHERE created_at >= DATE_SUB(NOW(), INTERVAL 6 MONTH) AND status = 'completed'${branchFilter}
-       GROUP BY DATE_FORMAT(created_at, '%Y-%m')
+       FROM sales s WHERE created_at >= (NOW() - INTERVAL '6 months') AND status = 'completed'${branchFilter}
+       GROUP BY TO_CHAR(created_at, 'YYYY-MM')
        ORDER BY month ASC`,
             { type: QueryTypes.SELECT }
         );
@@ -124,9 +124,9 @@ const getDashboard = async (req, res, next) => {
 
         const stockAlerts = await db.sequelize.query(
             `SELECT id, name, quantity, min_stock_level, expiry_date,
-               DATEDIFF(expiry_date, CURDATE()) as days_to_expiry
+               (expiry_date - CURRENT_DATE) as days_to_expiry
         FROM medicines m
-        WHERE (quantity <= min_stock_level OR expiry_date <= DATE_ADD(CURDATE(), INTERVAL 30 DAY))
+        WHERE (quantity <= min_stock_level OR expiry_date <= (CURRENT_DATE + INTERVAL '30 days'))
           AND is_active = TRUE${medBranchFilter}
         ORDER BY quantity ASC LIMIT 8`,
             { type: QueryTypes.SELECT }
@@ -135,7 +135,7 @@ const getDashboard = async (req, res, next) => {
         let monthlyExpenses;
         try {
             const [results] = await db.sequelize.query(
-                `SELECT COALESCE(SUM(amount), 0) as total FROM expenses WHERE DATE(expense_date) >= ?${expBranchFilter}`,
+                `SELECT COALESCE(SUM(amount), 0) as total FROM expenses WHERE (expense_date)::DATE >= ?${expBranchFilter}`,
                 { replacements: [tzMonthStart], type: QueryTypes.SELECT }
             );
             monthlyExpenses = results;
@@ -200,19 +200,19 @@ const getMonthlyReport = async (req, res, next) => {
         const branchFilter = getBranchQueryFilter(req, '');
         const { year = new Date().getFullYear(), month } = req.query;
 
-        let dateFilter = 'YEAR(created_at) = ?';
+        let dateFilter = 'EXTRACT(YEAR FROM created_at) = ?';
         const replacements = [year];
         if (month) {
-            dateFilter += ' AND MONTH(created_at) = ?';
+            dateFilter += ' AND EXTRACT(MONTH FROM created_at) = ?';
             replacements.push(month);
         }
 
         const dailySales = await db.sequelize.query(
-            `SELECT DATE(created_at) as date, COUNT(*) as transactions,
+            `SELECT (created_at)::DATE as date, COUNT(*) as transactions,
               SUM(total_amount) as revenue, SUM(tax_amount) as tax,
               SUM(discount_amount) as discounts
        FROM sales WHERE ${dateFilter} AND status = 'completed'${branchFilter}
-       GROUP BY DATE(created_at) ORDER BY date ASC`,
+       GROUP BY (created_at)::DATE ORDER BY date ASC`,
             { replacements, type: QueryTypes.SELECT }
         );
 
@@ -229,16 +229,16 @@ const getMonthlyReport = async (req, res, next) => {
        JOIN medicines m ON si.medicine_id = m.id
        JOIN categories c ON m.category_id = c.id
        JOIN sales s ON si.sale_id = s.id
-       WHERE YEAR(s.created_at) = ? AND status = 'completed'
-       ${month ? 'AND MONTH(s.created_at) = ?' : ''}
+       WHERE EXTRACT(YEAR FROM s.created_at) = ? AND status = 'completed'
+       ${month ? 'AND EXTRACT(MONTH FROM s.created_at) = ?' : ''}
        GROUP BY c.id, c.name ORDER BY revenue DESC`,
             { replacements: month ? [year, month] : [year], type: QueryTypes.SELECT }
         );
 
         const expenses = await db.sequelize.query(
             `SELECT category, SUM(amount) as total
-       FROM expenses WHERE YEAR(expense_date) = ?
-       ${month ? 'AND MONTH(expense_date) = ?' : ''}
+       FROM expenses WHERE EXTRACT(YEAR FROM expense_date) = ?
+       ${month ? 'AND EXTRACT(MONTH FROM expense_date) = ?' : ''}
        GROUP BY category`,
             { replacements: month ? [year, month] : [year], type: QueryTypes.SELECT }
         );
@@ -260,7 +260,7 @@ const getProfitLoss = async (req, res, next) => {
               COALESCE(SUM(si.profit), 0) as gross_profit
        FROM sales s
        LEFT JOIN (SELECT sale_id, SUM((selling_price - purchase_price) * quantity) as profit FROM sale_items GROUP BY sale_id) si ON s.id = si.sale_id
-       WHERE DATE(s.created_at) BETWEEN ? AND ? AND s.status = 'completed'`,
+       WHERE (s.created_at)::DATE BETWEEN ? AND ? AND s.status = 'completed'`,
             { replacements: [start, end], type: QueryTypes.SELECT }
         );
 
@@ -464,7 +464,7 @@ const getDetailedReportData = async (req, whereSales, whereExpenses, replacement
                 SUM(CASE WHEN paid_amount > 0 AND balance > 0 THEN balance ELSE 0 END) as partial_debt,
                 SUM(CASE WHEN balance > 0 THEN balance ELSE 0 END) as total_uncollected
              FROM debts
-             WHERE status != 'cancelled' AND created_at >= ? AND created_at <= ?${debtBranchFilter.replace('WHERE', 'AND')}`,
+             WHERE status::TEXT != 'cancelled' AND created_at >= ? AND created_at <= ?${debtBranchFilter.replace('WHERE', 'AND')}`,
             { replacements, type: QueryTypes.SELECT }
         );
         const debtStats = (debtsGenerated && debtsGenerated.length > 0) ? debtsGenerated[0] : { full_debt: 0, partial_debt: 0, total_uncollected: 0 };
@@ -482,7 +482,7 @@ const getDetailedReportData = async (req, whereSales, whereExpenses, replacement
         // 4. Detailed Sales Trend (Revenue & Profit per day)
         const salesTrend = await db.sequelize.query(
             `SELECT 
-                DATE(s.created_at) as date,
+                (s.created_at)::DATE as date,
                 SUM(s.total_amount) as revenue,
                 SUM(COALESCE(si.profit_total, 0)) as profit
              FROM sales s
@@ -494,7 +494,7 @@ const getDetailedReportData = async (req, whereSales, whereExpenses, replacement
                  GROUP BY sale_id
              ) si ON s.id = si.sale_id
              WHERE s.status = 'completed' AND s.created_at >= ? AND s.created_at <= ?${branchFilter}
-             GROUP BY DATE(s.created_at)
+             GROUP BY (s.created_at)::DATE
              ORDER BY date ASC`,
             { replacements, type: QueryTypes.SELECT }
         );

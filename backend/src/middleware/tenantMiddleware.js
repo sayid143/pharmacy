@@ -29,15 +29,14 @@ const getTenantDb = async (tenant) => {
     const config = tenant.db_config || {};
     const sequelize = new Sequelize(
         tenant.db_name,
-        config.user || process.env.DB_USER || 'root',
+        config.user || process.env.DB_USER || 'postgres',
         config.password || process.env.DB_PASSWORD || '',
         {
             host: config.host || process.env.DB_HOST || 'localhost',
-            port: parseInt(config.port) || parseInt(process.env.DB_PORT) || 3306,
-            dialect: 'mysql',
+            port: parseInt(config.port) || parseInt(process.env.DB_PORT) || 5432,
+            dialect: 'postgres',
             logging: false,
             pool: { max: 10, min: 0, acquire: 30000, idle: 10000 },
-            timezone: '+00:00',
             define: {
                 timestamps: true,
                 underscored: true,

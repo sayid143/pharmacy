@@ -20,15 +20,14 @@ import PurchaseOrderItem from './purchaseOrderItem.js';
 // Default static connection (fallback/migration)
 const staticSequelize = new Sequelize(
     process.env.DB_NAME || 'pharmacare',
-    process.env.DB_USER || 'root',
+    process.env.DB_USER || 'postgres',
     process.env.DB_PASSWORD || '',
     {
         host: process.env.DB_HOST || 'localhost',
-        port: parseInt(process.env.DB_PORT) || 3306,
-        dialect: 'mysql',
+        port: parseInt(process.env.DB_PORT) || 5432,
+        dialect: 'postgres',
         logging: false,
         pool: { max: 20, min: 0, acquire: 60000, idle: 10000 },
-        timezone: '+00:00',
         retry: {
             match: [
                 /SequelizeConnectionError/,
@@ -92,7 +91,7 @@ db.testConnection = async () => {
         while (retries > 0) {
             try {
                 await staticSequelize.authenticate();
-                logger.info('Static MySQL database connected successfully');
+                logger.info('Static PostgreSQL database connected successfully');
                 return true;
             } catch (err) {
                 retries--;

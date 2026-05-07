@@ -45,7 +45,7 @@ const Debt = (sequelize, DataTypes) => {
             allowNull: true
         },
         status: {
-            type: DataTypes.ENUM('pending', 'partial', 'paid', 'overdue', 'unpaid'),
+            type: DataTypes.ENUM('pending', 'partial', 'paid', 'overdue', 'unpaid', 'cancelled'),
             defaultValue: 'pending'
         },
         user_id: {

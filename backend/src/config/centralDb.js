@@ -1,15 +1,16 @@
 import { Sequelize, DataTypes } from 'sequelize';
-import mysql from 'mysql2/promise';
+import pg from 'pg';
+const { Client } = pg;
 import 'dotenv/config';
 
 const centralSequelize = new Sequelize(
     process.env.CENTRAL_DB_NAME || 'pharmacare_central',
-    process.env.DB_USER || 'root',
+    process.env.DB_USER || 'postgres',
     process.env.DB_PASSWORD || '',
     {
         host: process.env.DB_HOST || 'localhost',
-        port: parseInt(process.env.DB_PORT) || 3306,
-        dialect: 'mysql',
+        port: parseInt(process.env.DB_PORT) || 5432,
+        dialect: 'postgres',
         logging: false,
         pool: { max: 10, min: 0, acquire: 60000, idle: 10000 },
         retry: {
@@ -68,14 +69,26 @@ const centralDb = {
         const dbName = process.env.CENTRAL_DB_NAME || 'pharmacare_central';
         
         // Ensure database exists
-        const connection = await mysql.createConnection({
+        const client = new Client({
             host: process.env.DB_HOST || 'localhost',
-            port: parseInt(process.env.DB_PORT) || 3306,
-            user: process.env.DB_USER || 'root',
-            password: process.env.DB_PASSWORD || ''
+            port: parseInt(process.env.DB_PORT) || 5432,
+            user: process.env.DB_USER || 'postgres',
+            password: process.env.DB_PASSWORD || '',
+            database: 'postgres'
         });
-        await connection.query(`CREATE DATABASE IF NOT EXISTS ${dbName} CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci`);
-        await connection.end();
+
+        try {
+            await client.connect();
+            const res = await client.query(`SELECT 1 FROM pg_database WHERE datname = $1`, [dbName]);
+            if (res.rowCount === 0) {
+                await client.query(`CREATE DATABASE ${dbName}`);
+                console.log(`Central Database ${dbName} created successfully`);
+            }
+        } catch (err) {
+            console.error('Error creating central database:', err);
+        } finally {
+            await client.end();
+        }
         
         let retries = 5;
         while (retries > 0) {
@@ -103,3 +116,4 @@ const centralDb = {
 };
 
 export default centralDb;
+
