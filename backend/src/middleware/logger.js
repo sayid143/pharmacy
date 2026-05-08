@@ -18,16 +18,18 @@ const logFormat = winston.format.combine(
     })
 );
 
-const logger = winston.createLogger({
-    level: process.env.LOG_LEVEL || 'info',
-    format: logFormat,
-    transports: [
-        new winston.transports.Console({
-            format: winston.format.combine(
-                winston.format.colorize(),
-                logFormat
-            )
-        }),
+const transports = [
+    new winston.transports.Console({
+        format: winston.format.combine(
+            winston.format.colorize(),
+            logFormat
+        )
+    })
+];
+
+// Only add file transports if NOT running on Vercel
+if (!process.env.VERCEL) {
+    transports.push(
         new DailyRotateFile({
             filename: path.join(logDir, 'error-%DATE%.log'),
             datePattern: 'YYYY-MM-DD',
@@ -39,7 +41,13 @@ const logger = winston.createLogger({
             datePattern: 'YYYY-MM-DD',
             maxFiles: '14d'
         })
-    ]
+    );
+}
+
+const logger = winston.createLogger({
+    level: process.env.LOG_LEVEL || 'info',
+    format: logFormat,
+    transports: transports
 });
 
 export default logger;
