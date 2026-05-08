@@ -1,8 +1,14 @@
 import axios from 'axios';
 import toast from 'react-hot-toast';
 
+const getBaseURL = () => {
+    const envURL = import.meta.env.VITE_API_URL;
+    if (!envURL) return '/api';
+    return envURL.endsWith('/api') ? envURL : `${envURL}/api`;
+};
+
 const api = axios.create({
-    baseURL: import.meta.env.VITE_API_URL || '/api',
+    baseURL: getBaseURL(),
     headers: { 'Content-Type': 'application/json' },
     timeout: 30000,
 });
