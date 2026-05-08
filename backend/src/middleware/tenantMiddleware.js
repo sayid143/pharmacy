@@ -119,17 +119,25 @@ export const tenantMiddleware = async (req, res, next) => {
     const tenantCode = req.headers['x-tenant-id'] || 'default';
     
     try {
-        const tenant = await centralDb.Tenant.findOne({ where: { tenant_code: tenantCode, is_active: true } });
+        let tenant = await centralDb.Tenant.findOne({ where: { tenant_code: tenantCode, is_active: true } });
+        
+        // Fallback for default tenant if table is empty
+        if (!tenant && tenantCode === 'default') {
+            tenant = {
+                tenant_code: 'default',
+                db_name: process.env.DB_NAME,
+                db_config: {}
+            };
+        }
+
         if (!tenant) {
             return res.status(404).json({ success: false, message: 'Tenant not found or inactive.' });
         }
 
         const db = await getTenantDb(tenant);
         
-        // Provide the db in req for explicit usage
         req.tenantDb = db;
         
-        // Wrap in context for global usage via proxy
         tenantContext.run(db, () => {
             next();
         });
