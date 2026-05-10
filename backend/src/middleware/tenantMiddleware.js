@@ -121,8 +121,8 @@ export const tenantMiddleware = async (req, res, next) => {
     try {
         let tenant = await centralDb.Tenant.findOne({ where: { tenant_code: tenantCode, is_active: true } });
         
-        // Fallback for default tenant if table is empty
-        if (!tenant && tenantCode === 'default') {
+        // Fallback for default tenant if table is empty or tenant not found
+        if (!tenant) {
             tenant = {
                 tenant_code: 'default',
                 db_name: process.env.DB_NAME,
