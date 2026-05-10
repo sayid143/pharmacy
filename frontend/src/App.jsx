@@ -32,7 +32,14 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
 };
 
 const AppRoutes = () => {
-    const { user } = useAuth();
+    const { user, loading } = useAuth();
+
+    if (loading) return (
+        <div className="min-h-screen flex items-center justify-center bg-gray-50">
+            <div className="w-12 h-12 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin" />
+        </div>
+    );
+
     return (
         <Routes>
             <Route path="/login" element={user ? <Navigate to="/" replace /> : <Login />} />
