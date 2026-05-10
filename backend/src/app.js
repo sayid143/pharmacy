@@ -33,8 +33,19 @@ const __dirname = path.dirname(__filename);
 const app = express();
 
 // Security & CORS - Simplified for maximum compatibility
-app.use(cors());
-app.use(helmet({ 
+const corsOptions = {
+    origin: function (origin, callback) {
+        callback(null, true);
+    },
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+    allowedHeaders: ['X-CSRF-Token', 'X-Requested-With', 'Accept', 'Accept-Version', 'Content-Length', 'Content-MD5', 'Content-Type', 'Date', 'X-Api-Version', 'Authorization']
+};
+
+app.use(cors(corsOptions));
+app.options('*', cors(corsOptions));
+
+app.use(helmet({  
     crossOriginResourcePolicy: { policy: 'cross-origin' },
     contentSecurityPolicy: false // Disable CSP for API deployment
 }));
