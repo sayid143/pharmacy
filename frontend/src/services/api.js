@@ -42,6 +42,15 @@ api.interceptors.response.use(
         const originalRequest = error.config;
 
         if (error.response?.status === 401 && !originalRequest._retry) {
+            // Don't redirect to login if the request was to a public auth route
+            const isPublicRoute = originalRequest.url.includes('/auth/login') || 
+                                 originalRequest.url.includes('/auth/register') || 
+                                 originalRequest.url.includes('/auth/roles');
+
+            if (isPublicRoute) {
+                return Promise.reject(error);
+            }
+
             originalRequest._retry = true;
             const refreshToken = localStorage.getItem('refreshToken');
             if (refreshToken) {
