@@ -20,10 +20,8 @@ const startServer = async () => {
 // Start DB in background - don't await so Vercel can boot the app immediately
 startServer();
 
-if (process.env.NODE_ENV !== 'production') {
-  app.listen(PORT, () => {
-    console.log(`🚀 Local PharmaCare API running on port ${PORT}`);
-  });
-}
+app.listen(PORT, () => {
+  console.log(`🚀 PharmaCare API running on port ${PORT}`);
+});
 
 export default app;
