@@ -32,6 +32,17 @@ const StatCard = ({ title, value, icon: Icon, color, bg }) => {
     );
 };
 
+const COLUMNS = [
+    { id: 'medicine', label: 'Medicine' },
+    { id: 'batch', label: 'Batch' },
+    { id: 'expiry', label: 'Expiry' },
+    { id: 'status', label: 'Status' },
+    { id: 'stock', label: 'In Stock' },
+    { id: 'buying_price', label: 'Buying Price' },
+    { id: 'selling_price', label: 'Selling Price' },
+    { id: 'actions', label: 'Actions' },
+];
+
 export default function Medicines() {
     const { isPharmacist, isAdmin } = useAuth();
     const [searchParams] = useSearchParams();
@@ -71,16 +82,7 @@ export default function Medicines() {
         }));
     };
 
-    const COLUMNS = [
-        { id: 'medicine', label: 'Medicine' },
-        { id: 'batch', label: 'Batch' },
-        { id: 'expiry', label: 'Expiry' },
-        { id: 'status', label: 'Status' },
-        { id: 'stock', label: 'In Stock' },
-        { id: 'buying_price', label: 'Buying Price' },
-        { id: 'selling_price', label: 'Selling Price' },
-        { id: 'actions', label: 'Actions' },
-    ];
+
 
     const fetchMedicines = useCallback(async (page = 1) => {
         setLoading(true);
@@ -223,7 +225,7 @@ export default function Medicines() {
                                             <span className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Display Columns</span>
                                         </div>
                                         <div className="max-h-[300px] overflow-y-auto px-1">
-                                            {COLUMNS.map(col => (
+                                            {COLUMNS.filter(col => col.id !== 'actions' || isPharmacist).map(col => (
                                                 <button
                                                     key={col.id}
                                                     onClick={() => toggleColumn(col.id)}
@@ -269,7 +271,7 @@ export default function Medicines() {
                             <tbody className="bg-white text-[13px]">
                                 {loading ? (
                                     <tr>
-                                        <td colSpan={8} className="text-center py-20 text-gray-400">
+                                        <td colSpan={COLUMNS.filter(c => visibleColumns[c.id] && (c.id !== 'actions' || isPharmacist)).length} className="text-center py-20 text-gray-400">
                                             <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-3" />
                                             Loading inventory...
                                         </td>
@@ -343,7 +345,7 @@ export default function Medicines() {
                                     ))
                                 ) : (
                                     <tr>
-                                        <td colSpan={8} className="text-center py-20 text-gray-500">
+                                        <td colSpan={COLUMNS.filter(c => visibleColumns[c.id] && (c.id !== 'actions' || isPharmacist)).length} className="text-center py-20 text-gray-500">
                                             <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4 border border-gray-100">
                                                 <AlertTriangle size={24} className="text-gray-400" />
                                             </div>
