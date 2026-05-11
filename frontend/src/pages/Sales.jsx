@@ -20,8 +20,7 @@ export default function Sales() {
     // Edit State
     const [editId, setEditId] = useState(null);
 
-    // Stats
-    const [stats, setStats] = useState({ today_sales: 0, today_income: 0, monthly_sales: 0, low_stock: 0 });
+
 
     // Mode
     const [isMultiMode, setIsMultiMode] = useState(false);
@@ -48,20 +47,7 @@ export default function Sales() {
     const total = Math.max(0, subtotal + taxAmt);
     const paidAmt = total; // Implied fully paid
 
-    // Fetch stats
-    useEffect(() => {
-        api.get('/analytics/dashboard')
-            .then(r => {
-                const s = r.data.data?.summary || {};
-                setStats({
-                    today_sales: s.today_transactions || 0,
-                    today_income: s.today_revenue || 0,
-                    monthly_sales: s.monthly_transactions || 0,
-                    low_stock: s.low_stock_count || 0,
-                });
-            })
-            .catch(() => { });
-    }, []);
+
 
     // Load from Edit
     useEffect(() => {
@@ -310,37 +296,6 @@ export default function Sales() {
     return (
         <div className="max-w-[1300px] mx-auto space-y-6 animate-fade-in pb-10">
 
-            {/* Stat Cards */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                <div className="card p-4 flex items-center justify-between border-l-4 border-l-emerald-400">
-                    <div>
-                        <p className="text-xs text-gray-500 font-medium mb-1">Today's Sales</p>
-                        <h3 className="text-xl font-bold text-gray-900">{stats.today_sales}</h3>
-                    </div>
-                    <div className="w-12 h-12 bg-emerald-50 rounded-xl flex items-center justify-center text-emerald-500"><ShoppingCart size={24} /></div>
-                </div>
-                <div className="card p-4 flex items-center justify-between border-l-4 border-l-blue-400">
-                    <div>
-                        <p className="text-xs text-gray-500 font-medium mb-1">Today's Income</p>
-                        <h3 className="text-lg font-bold text-gray-900">ETB {Number(stats.today_income).toFixed(0)}</h3>
-                    </div>
-                    <div className="w-12 h-12 bg-blue-50 rounded-xl flex items-center justify-center text-blue-500"><DollarSign size={24} /></div>
-                </div>
-                <div className="card p-4 flex items-center justify-between border-l-4 border-l-indigo-400">
-                    <div>
-                        <p className="text-xs text-gray-500 font-medium mb-1">Monthly Sales</p>
-                        <h3 className="text-xl font-bold text-gray-900">{stats.monthly_sales}</h3>
-                    </div>
-                    <div className="w-12 h-12 bg-indigo-50 rounded-xl flex items-center justify-center text-indigo-500"><Activity size={24} /></div>
-                </div>
-                <div className="card p-4 flex items-center justify-between border-l-4 border-l-orange-400">
-                    <div>
-                        <p className="text-xs text-gray-500 font-medium mb-1">Low Stock Items</p>
-                        <h3 className="text-xl font-bold text-gray-900">{stats.low_stock}</h3>
-                    </div>
-                    <div className="w-12 h-12 bg-orange-50 rounded-xl flex items-center justify-center text-orange-500"><Package size={24} /></div>
-                </div>
-            </div>
 
             {/* Unified Process Sale Container */}
             <div className="w-full">
