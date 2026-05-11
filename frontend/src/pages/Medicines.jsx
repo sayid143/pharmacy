@@ -228,10 +228,13 @@ export default function Medicines() {
                         )}
 
                         {/* Column Filter Dropdown */}
-                        <div className="relative">
+                        <div className={`relative ${showColumnFilter ? 'z-[100]' : 'z-10'}`}>
                             <button
-                                onClick={() => setShowColumnFilter(!showColumnFilter)}
-                                className="p-2.5 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all cursor-pointer flex items-center justify-center border border-gray-200 bg-white shadow-sm"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    setShowColumnFilter(!showColumnFilter);
+                                }}
+                                className={`p-2.5 rounded-xl transition-all flex items-center justify-center border shadow-sm cursor-pointer ${showColumnFilter ? 'bg-blue-600 border-blue-600 text-white' : 'text-gray-500 hover:text-blue-600 hover:bg-blue-50 border-gray-200 bg-white'}`}
                                 title="Column Visibility"
                             >
                                 <Filter size={20} />
@@ -239,8 +242,11 @@ export default function Medicines() {
 
                             {showColumnFilter && (
                                 <>
-                                    <div className="fixed inset-0 z-30" onClick={() => setShowColumnFilter(false)} />
-                                    <div className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-2xl border border-gray-100 z-40 animate-fade-in py-2">
+                                    <div className="fixed inset-0 z-[90] bg-black/5" onClick={() => setShowColumnFilter(false)} />
+                                    <div 
+                                        onClick={(e) => e.stopPropagation()}
+                                        className="absolute right-0 mt-2 w-64 bg-white rounded-2xl shadow-2xl border border-gray-100 z-[110] overflow-hidden"
+                                    >
                                         <div className="px-4 py-2 border-b border-gray-50 mb-1">
                                             <span className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Display Columns</span>
                                         </div>
