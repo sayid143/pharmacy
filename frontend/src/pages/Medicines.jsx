@@ -58,16 +58,36 @@ export default function Medicines() {
     const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
     const [mobileViewMode, setMobileViewMode] = useState('card'); // 'table' | 'card'
     const [showColumnFilter, setShowColumnFilter] = useState(false);
-    const [visibleColumns, setVisibleColumns] = useState({
-        medicine: true,
-        batch: true,
-        expiry: true,
-        status: true,
-        stock: true,
-        buying_price: true,
-        selling_price: true,
-        actions: true
+    const [visibleColumns, setVisibleColumns] = useState(() => {
+        try {
+            const saved = localStorage.getItem('medicine_column_visibility');
+            return saved ? JSON.parse(saved) : {
+                medicine: true,
+                batch: true,
+                expiry: true,
+                status: true,
+                stock: true,
+                buying_price: true,
+                selling_price: true,
+                actions: true
+            };
+        } catch (e) {
+            return {
+                medicine: true,
+                batch: true,
+                expiry: true,
+                status: true,
+                stock: true,
+                buying_price: true,
+                selling_price: true,
+                actions: true
+            };
+        }
     });
+
+    useEffect(() => {
+        localStorage.setItem('medicine_column_visibility', JSON.stringify(visibleColumns));
+    }, [visibleColumns]);
 
     useEffect(() => {
         const handleResize = () => setIsMobile(window.innerWidth < 768);
@@ -370,15 +390,21 @@ export default function Medicines() {
                                 {medicines.map(med => (
                                     <div key={med.id} className="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm space-y-4 hover:border-blue-200 transition-all">
                                         <div className="flex items-start justify-between">
-                                            <div className="flex items-center gap-3">
-                                                <div className="w-12 h-12 bg-blue-50/50 rounded-xl flex items-center justify-center border border-blue-100/50 flex-shrink-0 shadow-sm">
-                                                    {med.image ? <img src={med.image} className="w-full h-full object-cover rounded-xl" alt="" /> : <Pill size={20} className="text-blue-500" />}
+                                            {visibleColumns.medicine ? (
+                                                <div className="flex items-center gap-3">
+                                                    <div className="w-12 h-12 bg-blue-50/50 rounded-xl flex items-center justify-center border border-blue-100/50 flex-shrink-0 shadow-sm">
+                                                        {med.image ? <img src={med.image} className="w-full h-full object-cover rounded-xl" alt="" /> : <Pill size={20} className="text-blue-500" />}
+                                                    </div>
+                                                    <div>
+                                                        <p className="font-black text-gray-900 text-base leading-tight">{med.name}</p>
+                                                        <p className="text-xs text-gray-500 font-medium mt-0.5">{med.category_name || med.dosage_form}</p>
+                                                    </div>
                                                 </div>
-                                                <div>
-                                                    <p className="font-black text-gray-900 text-base leading-tight">{med.name}</p>
-                                                    <p className="text-xs text-gray-500 font-medium mt-0.5">{med.category_name || med.dosage_form}</p>
+                                            ) : (
+                                                <div className="flex items-center gap-2 text-gray-400 italic text-xs">
+                                                    <Pill size={14} /> Medicine Hidden
                                                 </div>
-                                            </div>
+                                            )}
                                             {visibleColumns.status && getStockBadge(med)}
                                         </div>
 
