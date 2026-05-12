@@ -222,18 +222,8 @@ export default function Expenses() {
                 )}
             </div>
 
-            {/* Stats Cards Row 1 */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="card p-4 flex justify-between items-center border-l-4 border-l-emerald-500 shadow-sm rounded-xl bg-white hover:shadow-md transition-shadow">
-                    <div>
-                        <p className="text-[11px] text-gray-500 font-bold uppercase tracking-wider">{statsLabel} Income</p>
-                        <h3 className="text-xl font-black text-gray-900 mt-1">${Number(reports?.summary?.actual_collected || 0).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</h3>
-                    </div>
-                    <div className="w-10 h-10 bg-emerald-50 rounded-lg flex items-center justify-center text-emerald-500">
-                        <DollarSign size={20} />
-                    </div>
-                </div>
-
+            {/* Stats Cards Row */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="card p-4 flex justify-between items-center border-l-4 border-l-rose-500 shadow-sm rounded-xl bg-white hover:shadow-md transition-shadow">
                     <div>
                         <p className="text-[11px] text-gray-500 font-bold uppercase tracking-wider">{statsLabel} Expenses</p>
@@ -241,39 +231,6 @@ export default function Expenses() {
                     </div>
                     <div className="w-10 h-10 bg-rose-50 rounded-lg flex items-center justify-center text-rose-500">
                         <div className="w-5 h-5 bg-rose-500 rounded-full flex items-center justify-center text-white text-base font-bold leading-none pb-0.5">-</div>
-                    </div>
-                </div>
-
-                <div className="card p-4 flex justify-between items-center border-l-4 border-l-purple-500 shadow-sm rounded-xl bg-white hover:shadow-md transition-shadow">
-                    <div>
-                        <p className="text-[11px] text-gray-500 font-bold uppercase tracking-wider">{statsLabel} Sales</p>
-                        <h3 className="text-xl font-black text-gray-900 mt-1">${Number(reports?.summary?.total_revenue || 0).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</h3>
-                    </div>
-                    <div className="w-10 h-10 bg-purple-50 rounded-lg flex items-center justify-center text-purple-500">
-                        <ShoppingCart size={20} />
-                    </div>
-                </div>
-            </div>
-
-            {/* Stats Cards Row 2 */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="card p-4 flex justify-between items-center border-l-4 border-l-rose-500 shadow-sm rounded-xl bg-white hover:shadow-md transition-shadow">
-                    <div>
-                        <p className="text-[11px] text-gray-500 font-bold uppercase tracking-wider">Filtered Expenses</p>
-                        <h3 className="text-xl font-black text-gray-900 mt-1">${Number(dynamicExpenseTotal || 0).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</h3>
-                    </div>
-                    <div className="w-10 h-10 bg-rose-50 rounded-lg flex items-center justify-center text-rose-500">
-                        <DollarSign size={20} />
-                    </div>
-                </div>
-
-                <div className="card p-4 flex justify-between items-center border-l-4 border-l-orange-500 shadow-sm rounded-xl bg-white hover:shadow-md transition-shadow">
-                    <div>
-                        <p className="text-[11px] text-gray-500 font-bold uppercase tracking-wider">Number of Expenses</p>
-                        <h3 className="text-xl font-black text-gray-900 mt-1">{dynamicExpenseCount || 0}</h3>
-                    </div>
-                    <div className="w-10 h-10 bg-orange-50 rounded-lg flex items-center justify-center text-orange-500">
-                        <List size={20} />
                     </div>
                 </div>
 
