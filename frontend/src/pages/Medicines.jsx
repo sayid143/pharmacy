@@ -58,30 +58,29 @@ export default function Medicines() {
     const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
     const [mobileViewMode, setMobileViewMode] = useState('card'); // 'table' | 'card'
     const [showColumnFilter, setShowColumnFilter] = useState(false);
+    
+    // Default visibility for all columns
+    const DEFAULT_VISIBILITY = {
+        medicine: true,
+        batch: true,
+        expiry: true,
+        status: true,
+        stock: true,
+        buying_price: true,
+        selling_price: true,
+        actions: true
+    };
+
     const [visibleColumns, setVisibleColumns] = useState(() => {
         try {
             const saved = localStorage.getItem('medicine_column_visibility');
-            return saved ? JSON.parse(saved) : {
-                medicine: true,
-                batch: true,
-                expiry: true,
-                status: true,
-                stock: true,
-                buying_price: true,
-                selling_price: true,
-                actions: true
-            };
+            if (!saved) return DEFAULT_VISIBILITY;
+            
+            const parsed = JSON.parse(saved);
+            // Merge with defaults to ensure any new columns are included
+            return { ...DEFAULT_VISIBILITY, ...parsed };
         } catch (e) {
-            return {
-                medicine: true,
-                batch: true,
-                expiry: true,
-                status: true,
-                stock: true,
-                buying_price: true,
-                selling_price: true,
-                actions: true
-            };
+            return DEFAULT_VISIBILITY;
         }
     });
 
@@ -228,12 +227,9 @@ export default function Medicines() {
                         )}
 
                         {/* Column Filter Dropdown */}
-                        <div className={`relative ${showColumnFilter ? 'z-[100]' : 'z-10'}`}>
+                        <div className="relative">
                             <button
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    setShowColumnFilter(!showColumnFilter);
-                                }}
+                                onClick={() => setShowColumnFilter(!showColumnFilter)}
                                 className={`p-2.5 rounded-xl transition-all flex items-center justify-center border shadow-sm cursor-pointer ${showColumnFilter ? 'bg-blue-600 border-blue-600 text-white' : 'text-gray-500 hover:text-blue-600 hover:bg-blue-50 border-gray-200 bg-white'}`}
                                 title="Column Visibility"
                             >
@@ -242,10 +238,10 @@ export default function Medicines() {
 
                             {showColumnFilter && (
                                 <>
-                                    <div className="fixed inset-0 z-[90] bg-black/5" onClick={() => setShowColumnFilter(false)} />
+                                    <div className="fixed inset-0 z-30" onClick={() => setShowColumnFilter(false)} />
                                     <div 
                                         onClick={(e) => e.stopPropagation()}
-                                        className="absolute right-0 mt-2 w-64 bg-white rounded-2xl shadow-2xl border border-gray-100 z-[110] overflow-hidden"
+                                        className="absolute left-0 sm:left-auto sm:right-0 mt-2 w-60 bg-white rounded-2xl shadow-2xl border border-gray-100 z-40 animate-fade-in overflow-hidden py-2"
                                     >
                                         <div className="px-4 py-2 border-b border-gray-50 mb-1">
                                             <span className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Display Columns</span>
