@@ -241,13 +241,13 @@ export default function Medicines() {
                                     <div className="fixed inset-0 z-30" onClick={() => setShowColumnFilter(false)} />
                                     <div 
                                         onClick={(e) => e.stopPropagation()}
-                                        className="absolute left-0 sm:left-auto sm:right-0 mt-2 w-60 bg-white rounded-2xl shadow-2xl border border-gray-100 z-40 animate-fade-in overflow-hidden py-2"
+                                        className="absolute left-0 sm:left-auto sm:right-0 mt-2 w-56 bg-white rounded-xl shadow-2xl border border-gray-100 z-40 animate-fade-in py-2"
                                     >
                                         <div className="px-4 py-2 border-b border-gray-50 mb-1">
                                             <span className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Display Columns</span>
                                         </div>
                                         <div className="max-h-[300px] overflow-y-auto px-1">
-                                            {COLUMNS.filter(col => col.id !== 'actions' || isPharmacist).map(col => (
+                                            {COLUMNS.map(col => (
                                                 <button
                                                     key={col.id}
                                                     onClick={() => toggleColumn(col.id)}
