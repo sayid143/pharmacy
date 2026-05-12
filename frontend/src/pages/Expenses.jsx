@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import {
     DollarSign, Upload, Search, Plus, Trash2, Edit, FileText, Download,
-    Loader2, TrendingUp, ShoppingCart, List, Tag, X, AlertTriangle
+    Loader2, TrendingUp, ShoppingCart, List, Tag, X, AlertTriangle,
+    Filter, Check, LayoutGrid, ChevronLeft, ChevronRight
 } from 'lucide-react';
 import api from '../services/api';
 import toast from 'react-hot-toast';
@@ -21,6 +22,54 @@ export default function Expenses() {
     const [editId, setEditId] = useState(null);
     const [deleteConfirm, setDeleteConfirm] = useState(null);
     const [deleting, setDeleting] = useState(false);
+
+    // Table Features (Like Reports/Medicines)
+    const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+    const [mobileViewMode, setMobileViewMode] = useState('card'); // 'table' | 'card'
+    const [showColumnFilter, setShowColumnFilter] = useState(false);
+
+    const COLUMNS = [
+        { id: 'date', label: 'Date' },
+        { id: 'title', label: 'Title' },
+        { id: 'category', label: 'Category' },
+        { id: 'description', label: 'Description' },
+        { id: 'amount', label: 'Amount' },
+        { id: 'payment', label: 'Payment' },
+        { id: 'actions', label: 'Actions' },
+    ];
+
+    const [visibleColumns, setVisibleColumns] = useState(() => {
+        try {
+            const saved = localStorage.getItem('expense_column_visibility');
+            const defaults = {
+                date: true, title: true, category: true, description: true,
+                amount: true, payment: true, actions: true
+            };
+            return saved ? { ...defaults, ...JSON.parse(saved) } : defaults;
+        } catch (e) {
+            return {
+                date: true, title: true, category: true, description: true,
+                amount: true, payment: true, actions: true
+            };
+        }
+    });
+
+    useEffect(() => {
+        const handleResize = () => setIsMobile(window.innerWidth < 768);
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
+
+    useEffect(() => {
+        localStorage.setItem('expense_column_visibility', JSON.stringify(visibleColumns));
+    }, [visibleColumns]);
+
+    const toggleColumn = (column) => {
+        setVisibleColumns(prev => ({
+            ...prev,
+            [column]: !prev[column]
+        }));
+    };
 
     const [formData, setFormData] = useState({
         title: '',
@@ -247,22 +296,88 @@ export default function Expenses() {
 
             {/* List */}
             <div className="card overflow-hidden border border-gray-100 shadow-sm rounded-xl bg-white mt-4">
-                <div className="p-4 border-b border-gray-100 flex flex-col sm:flex-row gap-4 justify-between items-center">
-                    <div className="relative w-full sm:w-96">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
-                        <input
-                            type="text"
-                            placeholder="Search expenses..."
-                            value={search}
-                            onChange={handleSearch}
-                            className="form-input pl-10 py-2 w-full bg-white border border-gray-200 rounded-lg text-sm"
-                        />
+                <div className="p-4 border-b border-gray-100 flex flex-wrap gap-4 justify-between items-center bg-white">
+                    <div className="flex items-center gap-4 flex-1 min-w-[300px]">
+                        <div className="relative flex-1">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                            <input
+                                type="text"
+                                placeholder="Search expenses..."
+                                value={search}
+                                onChange={handleSearch}
+                                className="form-input pl-10 py-2 w-full bg-white border border-gray-200 rounded-lg text-sm"
+                            />
+                        </div>
+
+                        {/* Mobile View Toggle */}
+                        {isMobile && (
+                            <div className="flex bg-gray-100 p-1 rounded-xl border border-gray-200 shadow-sm">
+                                <button
+                                    onClick={() => setMobileViewMode('table')}
+                                    className={`p-2 rounded-lg transition-all flex items-center justify-center cursor-pointer ${mobileViewMode === 'table' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-400 hover:text-gray-600'}`}
+                                    title="Table View"
+                                >
+                                    <List size={18} />
+                                </button>
+                                <button
+                                    onClick={() => setMobileViewMode('card')}
+                                    className={`p-2 rounded-lg transition-all flex items-center justify-center cursor-pointer ${mobileViewMode === 'card' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-400 hover:text-gray-600'}`}
+                                    title="Card View"
+                                >
+                                    <LayoutGrid size={18} />
+                                </button>
+                            </div>
+                        )}
+
+                        {/* Column Filter Dropdown */}
+                        <div className="relative">
+                            <button
+                                onClick={() => setShowColumnFilter(!showColumnFilter)}
+                                className={`p-2.5 rounded-xl transition-all flex items-center justify-center border shadow-sm cursor-pointer ${showColumnFilter ? 'bg-blue-600 border-blue-600 text-white' : 'text-gray-500 hover:text-blue-600 hover:bg-blue-50 border-gray-200 bg-white'}`}
+                                title="Column Visibility"
+                            >
+                                <Filter size={20} />
+                            </button>
+
+                            {showColumnFilter && (
+                                <>
+                                    <div className="fixed inset-0 z-30" onClick={() => setShowColumnFilter(false)} />
+                                    <div 
+                                        onClick={(e) => e.stopPropagation()}
+                                        className="absolute left-0 sm:left-auto sm:right-0 mt-2 w-56 bg-white rounded-xl shadow-2xl border border-gray-100 z-40 animate-fade-in py-2"
+                                    >
+                                        <div className="px-4 py-2 border-b border-gray-50 mb-1">
+                                            <span className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Display Columns</span>
+                                        </div>
+                                        <div className="max-h-[300px] overflow-y-auto px-1">
+                                            {COLUMNS.map(col => (
+                                                <button
+                                                    key={col.id}
+                                                    onClick={() => toggleColumn(col.id)}
+                                                    className="w-full flex items-center justify-between px-3 py-2 rounded-lg hover:bg-gray-50 transition-colors group cursor-pointer"
+                                                >
+                                                    <span className={`text-[13px] font-medium ${visibleColumns[col.id] ? 'text-gray-900' : 'text-gray-400'}`}>
+                                                        {col.label}
+                                                    </span>
+                                                    <div className={`w-5 h-5 rounded-md border flex items-center justify-center transition-all ${visibleColumns[col.id]
+                                                        ? 'bg-blue-600 border-blue-600 shadow-sm'
+                                                        : 'bg-white border-gray-200'
+                                                        }`}>
+                                                        {visibleColumns[col.id] && <Check size={12} className="text-white" />}
+                                                    </div>
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
+                                </>
+                            )}
+                        </div>
                     </div>
                     <div>
                         <select
                             value={dateFilter}
                             onChange={(e) => setDateFilter(e.target.value)}
-                            className="form-input py-2 px-4 bg-white border border-gray-200 rounded-lg text-sm font-medium text-gray-700 min-w-[140px] appearance-none"
+                            className="form-input py-2 px-4 bg-white border border-gray-200 rounded-lg text-sm font-medium text-gray-700 min-w-[140px] appearance-none cursor-pointer"
                         >
                             <option value="today">Today</option>
                             <option value="week">This Week</option>
@@ -272,72 +387,141 @@ export default function Expenses() {
                     </div>
                 </div>
 
-                <div className="overflow-x-auto w-full">
-                    <table className="w-full text-left text-sm border-separate min-w-[800px]" style={{ borderSpacing: '0' }}>
-                        <thead className="bg-[#e6f4fe] text-sky-700 capitalize tracking-wide text-[13px] font-semibold sticky top-0 z-20 shadow-[0_4px_8px_-2px_rgba(0,0,0,0.05)]">
-                            <tr>
-                                <th className="px-4 py-3 whitespace-nowrap">Date</th>
-                                <th className="px-4 py-3 whitespace-nowrap">Title</th>
-                                <th className="px-4 py-3 whitespace-nowrap">Category</th>
-                                <th className="px-4 py-3">Description</th>
-                                <th className="px-4 py-3 text-right whitespace-nowrap">Amount</th>
-                                <th className="px-4 py-3 text-center whitespace-nowrap">Payment</th>
-                                <th className="px-4 py-3 text-right whitespace-nowrap print:hidden">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody className="bg-white text-[13px]">
+                <div className="w-full">
+                    {(!isMobile || mobileViewMode === 'table') ? (
+                        <div className="overflow-x-auto w-full">
+                            <table className="w-full text-left text-sm border-separate min-w-[800px]" style={{ borderSpacing: '0' }}>
+                                <thead className="bg-[#e6f4fe] text-sky-700 capitalize tracking-wide text-[13px] font-semibold sticky top-0 z-20 shadow-[0_4px_8px_-2px_rgba(0,0,0,0.05)]">
+                                    <tr>
+                                        {visibleColumns.date && <th className="px-4 py-3 whitespace-nowrap">Date</th>}
+                                        {visibleColumns.title && <th className="px-4 py-3 whitespace-nowrap">Title</th>}
+                                        {visibleColumns.category && <th className="px-4 py-3 whitespace-nowrap">Category</th>}
+                                        {visibleColumns.description && <th className="px-4 py-3">Description</th>}
+                                        {visibleColumns.amount && <th className="px-4 py-3 text-right whitespace-nowrap">Amount</th>}
+                                        {visibleColumns.payment && <th className="px-4 py-3 text-center whitespace-nowrap">Payment</th>}
+                                        {visibleColumns.actions && <th className="px-4 py-3 text-right whitespace-nowrap print:hidden">Actions</th>}
+                                    </tr>
+                                </thead>
+                                <tbody className="bg-white text-[13px]">
+                                    {loading ? (
+                                        <tr>
+                                            <td colSpan={COLUMNS.filter(c => visibleColumns[c.id]).length} className="text-center py-20 text-gray-400">
+                                                <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-3" />
+                                                Loading expenses...
+                                            </td>
+                                        </tr>
+                                    ) : filteredExpenses.length === 0 ? (
+                                        <tr>
+                                            <td colSpan={COLUMNS.filter(c => visibleColumns[c.id]).length} className="text-center py-20 text-gray-500">
+                                                <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4 border border-gray-100">
+                                                    <DollarSign size={24} className="text-gray-400" />
+                                                </div>
+                                                <p className="font-medium text-gray-800 text-lg">No expenses recorded</p>
+                                                <p className="text-sm mt-1 mb-4 text-gray-500">Start tracking your business expenses.</p>
+                                                <button onClick={() => openModal()} className="btn-primary flex items-center justify-center gap-2 px-6 py-2.5 rounded-lg shadow-sm font-medium mx-auto cursor-pointer">
+                                                    <Plus size={18} /> Add First Expense
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    ) : (
+                                        filteredExpenses.map(item => (
+                                            <tr key={item.id} className="bg-white even:bg-slate-50 hover:bg-gray-50/80 transition-colors shadow-[0_-1px_2px_rgba(0,0,0,0.05)] relative z-0 hover:z-10">
+                                                {visibleColumns.date && <td className="px-4 py-2.5 text-gray-500 font-medium whitespace-nowrap">{format(new Date(item.expense_date), 'MMM dd, yyyy')}</td>}
+                                                {visibleColumns.title && <td className="px-4 py-2.5 font-semibold text-gray-800 whitespace-nowrap">{item.title || '—'}</td>}
+                                                {visibleColumns.category && <td className="px-4 py-2.5 whitespace-nowrap"><span className="px-2 py-1 bg-blue-50 text-blue-700 text-[10px] uppercase font-bold tracking-wider rounded border border-blue-200/50">{item.category}</span></td>}
+                                                {visibleColumns.description && <td className="px-4 py-2.5 text-gray-600 font-medium whitespace-normal min-w-[150px]">{item.description}</td>}
+                                                {visibleColumns.amount && <td className="px-4 py-2.5 font-bold text-gray-900 text-right whitespace-nowrap">${Number(item.amount).toFixed(0)}</td>}
+                                                {visibleColumns.payment && (
+                                                    <td className="px-4 py-2.5 whitespace-nowrap text-center">
+                                                        <span className={`px-2 py-1 rounded text-[10px] font-bold uppercase tracking-tight ${item.payment_method === 'cash' ? 'bg-emerald-50 text-emerald-700' :
+                                                            item.payment_method === 'ebirr' ? 'bg-teal-50 text-teal-700' :
+                                                                item.payment_method === 'bank' ? 'bg-indigo-50 text-indigo-700' :
+                                                                    'bg-gray-100 text-gray-600'
+                                                            }`}>
+                                                            {item.payment_method}
+                                                        </span>
+                                                    </td>
+                                                )}
+                                                {visibleColumns.actions && (
+                                                    <td className="px-4 py-2.5 text-right whitespace-nowrap print:hidden">
+                                                        <div className="flex gap-1.5 justify-end items-center">
+                                                            {isPharmacist && (
+                                                                <button onClick={() => openModal(item)} className="p-1 text-blue-600 hover:bg-blue-50 rounded transition-colors cursor-pointer"><Edit size={16} /></button>
+                                                            )}
+                                                            {isAdmin && (
+                                                                <button onClick={() => setDeleteConfirm(item)} className="p-1 text-rose-600 hover:bg-rose-50 rounded transition-colors cursor-pointer"><Trash2 size={16} strokeWidth={2.5} /></button>
+                                                            )}
+                                                        </div>
+                                                    </td>
+                                                )}
+                                            </tr>
+                                        ))
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
+                    ) : (
+                        <div className="p-4 grid grid-cols-1 gap-4">
                             {loading ? (
-                                <tr>
-                                    <td colSpan="7" className="text-center py-20 text-gray-400">
-                                        <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-3" />
-                                        Loading expenses...
-                                    </td>
-                                </tr>
+                                <div className="text-center py-20 text-gray-400">
+                                    <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-3" />
+                                    Loading expenses...
+                                </div>
                             ) : filteredExpenses.length === 0 ? (
-                                <tr>
-                                    <td colSpan="7" className="text-center py-20 text-gray-500">
-                                        <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4 border border-gray-100">
-                                            <DollarSign size={24} className="text-gray-400" />
-                                        </div>
-                                        <p className="font-medium text-gray-800 text-lg">No expenses recorded</p>
-                                        <p className="text-sm mt-1 mb-4 text-gray-500">Start tracking your business expenses.</p>
-                                        <button onClick={() => openModal()} className="btn-primary flex items-center justify-center gap-2 px-6 py-2.5 rounded-lg shadow-sm font-medium mx-auto cursor-pointer">
-                                            <Plus size={18} /> Add First Expense
-                                        </button>
-                                    </td>
-                                </tr>
+                                <div className="text-center py-20 text-gray-500">
+                                    <p className="font-medium text-gray-800 text-lg">No expenses recorded</p>
+                                </div>
                             ) : (
                                 filteredExpenses.map(item => (
-                                    <tr key={item.id} className="bg-white even:bg-slate-50 hover:bg-gray-50/80 transition-colors shadow-[0_-1px_2px_rgba(0,0,0,0.05)] relative z-0 hover:z-10">
-                                        <td className="px-4 py-2.5 text-gray-500 font-medium whitespace-nowrap">{format(new Date(item.expense_date), 'MMM dd, yyyy')}</td>
-                                        <td className="px-4 py-2.5 font-semibold text-gray-800 whitespace-nowrap">{item.title || '—'}</td>
-                                        <td className="px-4 py-2.5 whitespace-nowrap"><span className="px-2 py-1 bg-blue-50 text-blue-700 text-[10px] uppercase font-bold tracking-wider rounded border border-blue-200/50">{item.category}</span></td>
-                                        <td className="px-4 py-2.5 text-gray-600 font-medium whitespace-normal min-w-[150px]">{item.description}</td>
-                                        <td className="px-4 py-2.5 font-bold text-gray-900 text-right whitespace-nowrap">${Number(item.amount).toFixed(0)}</td>
-                                        <td className="px-4 py-2.5 whitespace-nowrap text-center">
-                                            <span className={`px-2 py-1 rounded text-[10px] font-bold uppercase tracking-tight ${item.payment_method === 'cash' ? 'bg-emerald-50 text-emerald-700' :
-                                                item.payment_method === 'ebirr' ? 'bg-teal-50 text-teal-700' :
-                                                    item.payment_method === 'bank' ? 'bg-indigo-50 text-indigo-700' :
-                                                        'bg-gray-100 text-gray-600'
-                                                }`}>
-                                                {item.payment_method}
-                                            </span>
-                                        </td>
-                                         <td className="px-4 py-2.5 text-right whitespace-nowrap print:hidden">
-                                             <div className="flex gap-1.5 justify-end items-center">
-                                                 {isPharmacist && (
-                                                     <button onClick={() => openModal(item)} className="p-1 text-blue-600 hover:bg-blue-50 rounded transition-colors cursor-pointer"><Edit size={16} /></button>
-                                                 )}
-                                                 {isAdmin && (
-                                                     <button onClick={() => setDeleteConfirm(item)} className="p-1 text-rose-600 hover:bg-rose-50 rounded transition-colors cursor-pointer"><Trash2 size={16} strokeWidth={2.5} /></button>
-                                                 )}
-                                             </div>
-                                         </td>
-                                    </tr>
+                                    <div key={item.id} className="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm space-y-4 hover:border-blue-200 transition-all animate-fade-in">
+                                        <div className="flex justify-between items-start">
+                                            <div>
+                                                <p className="font-black text-gray-900 text-base leading-tight">{item.title || 'Untitled Expense'}</p>
+                                                <p className="text-xs text-gray-500 font-medium mt-1">{format(new Date(item.expense_date), 'MMM dd, yyyy')}</p>
+                                            </div>
+                                            <span className="px-2 py-1 bg-blue-50 text-blue-700 text-[10px] uppercase font-bold tracking-wider rounded border border-blue-200/50">{item.category}</span>
+                                        </div>
+                                        
+                                        <div className="flex flex-col gap-2 pt-2 border-t border-gray-50">
+                                            {visibleColumns.description && (
+                                                <div className="flex justify-between items-center text-[13px]">
+                                                    <span className="text-gray-500 font-medium">Description:</span>
+                                                    <span className="text-gray-700 text-right line-clamp-1">{item.description}</span>
+                                                </div>
+                                            )}
+                                            {visibleColumns.payment && (
+                                                <div className="flex justify-between items-center text-[13px]">
+                                                    <span className="text-gray-500 font-medium">Payment:</span>
+                                                    <span className="font-bold text-gray-900 capitalize">{item.payment_method}</span>
+                                                </div>
+                                            )}
+                                            {visibleColumns.amount && (
+                                                <div className="flex justify-between items-center text-[13px]">
+                                                    <span className="text-gray-500 font-medium">Amount:</span>
+                                                    <span className="font-black text-blue-600 text-lg">ETB {Number(item.amount).toFixed(0)}</span>
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        {visibleColumns.actions && (
+                                            <div className="flex items-center justify-end gap-2 pt-3 border-t border-gray-50">
+                                                {isPharmacist && (
+                                                    <button onClick={() => openModal(item)} className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-blue-600 bg-blue-50 text-xs font-black uppercase tracking-wider hover:bg-blue-100 transition-all border border-blue-100 cursor-pointer">
+                                                        <Edit size={14} /> Edit
+                                                    </button>
+                                                )}
+                                                {isAdmin && (
+                                                    <button onClick={() => setDeleteConfirm(item)} className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-rose-600 bg-rose-50 text-xs font-black uppercase tracking-wider hover:bg-rose-500 hover:text-white transition-all border border-rose-100 cursor-pointer">
+                                                        <Trash2 size={14} /> Delete
+                                                    </button>
+                                                )}
+                                            </div>
+                                        )}
+                                    </div>
                                 ))
                             )}
-                        </tbody>
-                    </table>
+                        </div>
+                    )}
                 </div>
             </div>
 
