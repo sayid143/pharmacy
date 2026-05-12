@@ -410,41 +410,39 @@ export default function Medicines() {
                                             {visibleColumns.status && getStockBadge(med)}
                                         </div>
 
-                                        <div className="grid grid-cols-2 gap-y-3 text-[13px] pt-2 border-t border-gray-50">
-                                            {visibleColumns.batch && (
-                                                <div className="flex flex-col">
-                                                    <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Batch #</span>
-                                                    <span className="font-mono font-bold text-blue-700 bg-blue-50 w-fit px-2 py-0.5 rounded border border-blue-100/50">{med.batch_number}</span>
+                                        <div className="flex flex-col gap-2.5 pt-2 border-t border-gray-50">
+                                            {visibleColumns.medicine && (
+                                                <div className="flex justify-between items-center text-[13px]">
+                                                    <span className="text-gray-500 font-medium">Medicine:</span>
+                                                    <span className="font-bold text-gray-900">{med.name}</span>
                                                 </div>
                                             )}
-                                            {visibleColumns.expiry && (
-                                                <div className="flex flex-col text-right">
-                                                    <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Expiry Date</span>
-                                                    <span className={`font-bold ${med.days_to_expiry <= 30 ? 'text-red-600' : 'text-gray-700'}`}>
-                                                        {format(new Date(med.expiry_date), 'MMM dd, yyyy')}
-                                                    </span>
+                                            {/* Category info */}
+                                            <div className="flex justify-between items-center text-[13px]">
+                                                <span className="text-gray-500 font-medium">Category:</span>
+                                                <span className="font-bold text-gray-900">{med.category_name || med.dosage_form || 'General'}</span>
+                                            </div>
+                                            {visibleColumns.buying_price && (
+                                                <div className="flex justify-between items-center text-[13px]">
+                                                    <span className="text-gray-500 font-medium">Buying Price:</span>
+                                                    <span className="font-bold text-gray-900">{parseFloat(med.purchase_price).toFixed(0)} ETB</span>
+                                                </div>
+                                            )}
+                                            {visibleColumns.selling_price && (
+                                                <div className="flex justify-between items-center text-[13px]">
+                                                    <span className="text-gray-500 font-medium">Selling Price:</span>
+                                                    <span className="font-bold text-blue-600">{parseFloat(med.selling_price).toFixed(0)} ETB</span>
                                                 </div>
                                             )}
                                             {visibleColumns.stock && (
-                                                <div className="flex flex-col">
-                                                    <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Available Stock</span>
-                                                    <div className="flex items-center gap-1.5">
-                                                        <span className="font-black text-gray-900 text-base">{med.quantity}</span>
-                                                        <span className="text-[11px] text-gray-500 font-bold uppercase">{med.unit || 'pcs'}</span>
+                                                <div className="flex justify-between items-center text-[13px]">
+                                                    <span className="text-gray-500 font-medium">Stock:</span>
+                                                    <div className="flex items-center gap-1">
+                                                        <span className="font-black text-gray-900">{med.quantity}</span>
+                                                        <span className="text-[10px] text-gray-400 font-bold uppercase">{med.unit || 'pcs'}</span>
                                                     </div>
                                                 </div>
                                             )}
-                                            <div className="flex flex-col text-right">
-                                                {visibleColumns.selling_price && (
-                                                    <>
-                                                        <span className="text-[10px] font-black text-blue-600 uppercase tracking-widest mb-1">Selling Price</span>
-                                                        <span className="font-black text-blue-700 text-lg">ETB {parseFloat(med.selling_price).toFixed(0)}</span>
-                                                    </>
-                                                )}
-                                                {visibleColumns.buying_price && (
-                                                    <span className="text-[10px] text-gray-400 font-bold mt-0.5">Cost: ETB {parseFloat(med.purchase_price).toFixed(0)}</span>
-                                                )}
-                                            </div>
                                         </div>
 
                                         {visibleColumns.actions && isPharmacist && (
