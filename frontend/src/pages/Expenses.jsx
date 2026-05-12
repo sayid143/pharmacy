@@ -295,7 +295,7 @@ export default function Expenses() {
             </div>
 
             {/* List */}
-            <div className="card overflow-hidden border border-gray-100 shadow-sm rounded-xl bg-white mt-4">
+            <div className="card border border-gray-100 shadow-sm rounded-xl bg-white mt-4 relative">
                 <div className="p-4 border-b border-gray-100 flex flex-wrap gap-4 justify-between items-center bg-white">
                     <div className="flex items-center gap-4 flex-1 min-w-[300px]">
                         <div className="relative flex-1">
