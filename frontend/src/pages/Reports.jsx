@@ -737,9 +737,9 @@ export default function Reports() {
                             </div>
                         </div>
 
-                        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 relative print:border-none print:shadow-none">
-                            <div id="main-table-ui" className="print:hidden">
-                                <div className="p-6 border-b border-gray-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 relative">
+                        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 relative print:border-none print:shadow-none overflow-visible">
+                            <div id="main-table-ui" className="print:hidden overflow-visible">
+                                <div className="p-6 border-b border-gray-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 relative overflow-visible">
                                     <h3 className="text-lg font-semibold text-gray-900">Transactions Summary</h3>
                                     <div className="flex items-center gap-2 sm:gap-4">
                                         {/* Mobile View Selector */}

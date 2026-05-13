@@ -181,8 +181,8 @@ export default function Medicines() {
             </div>
 
             {/* Filters Row */}
-            <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-4 relative">
-                <div className="flex flex-wrap items-center gap-4">
+            <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-4 relative overflow-visible">
+                <div className="flex flex-wrap items-center gap-4 overflow-visible">
                     <div className="relative flex-1 min-w-[300px]">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
                         <input
