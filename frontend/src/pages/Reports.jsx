@@ -1,5 +1,5 @@
 // src/pages/Reports.jsx
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { format, parseISO, subDays } from 'date-fns';
 import {
     BarChart, Bar, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip,
@@ -111,6 +111,19 @@ export default function Reports() {
     }, []);
 
     const [showColumnFilter, setShowColumnFilter] = useState(false);
+    const filterRef = useRef(null);
+
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (filterRef.current && !filterRef.current.contains(event.target)) {
+                setShowColumnFilter(false);
+            }
+        };
+        if (showColumnFilter) {
+            document.addEventListener('mousedown', handleClickOutside);
+        }
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, [showColumnFilter]);
     const [visibleColumns, setVisibleColumns] = useState({
         invoice_number: true,
         user: true,
@@ -761,7 +774,7 @@ export default function Reports() {
                                                 </button>
                                             </div>
                                         )}
-                                        <div className="relative">
+                                        <div className="relative" ref={filterRef}>
                                             <button
                                                 onClick={() => setShowColumnFilter(!showColumnFilter)}
                                                 className="p-2.5 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all cursor-pointer flex items-center justify-center border border-gray-100 shadow-sm"
@@ -771,9 +784,7 @@ export default function Reports() {
                                             </button>
 
                                             {showColumnFilter && (
-                                                <>
-                                                    <div className="fixed inset-0 z-30" onClick={() => setShowColumnFilter(false)} />
-                                                    <div className="absolute left-0 sm:left-auto sm:right-0 mt-2 w-56 bg-white rounded-xl shadow-2xl border border-gray-100 z-40 animate-fade-in py-2">
+                                                <div className="absolute left-0 sm:left-auto sm:right-0 mt-2 w-56 bg-white rounded-xl shadow-2xl border border-gray-100 z-40 animate-fade-in py-2">
                                                         <div className="px-4 py-2 border-b border-gray-50 mb-1">
                                                             <span className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Display Columns</span>
                                                         </div>
