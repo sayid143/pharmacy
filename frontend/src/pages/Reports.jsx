@@ -773,7 +773,7 @@ export default function Reports() {
                                             {showColumnFilter && (
                                                 <>
                                                     <div className="fixed inset-0 z-30" onClick={() => setShowColumnFilter(false)} />
-                                                    <div className="absolute left-0 sm:left-auto sm:right-0 mt-2 w-56 bg-white rounded-xl shadow-2xl border border-gray-100 z-40 animate-fade-in py-2">
+                                                    <div className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-2xl border border-gray-100 z-40 animate-fade-in py-2">
                                                         <div className="px-4 py-2 border-b border-gray-50 mb-1">
                                                             <span className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Display Columns</span>
                                                         </div>
